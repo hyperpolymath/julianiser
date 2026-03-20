@@ -1,0 +1,53 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+= Julianiser
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc: left
+:icons: font
+
+== What Is This?
+
+Julianiser auto-wraps existing Python and R data pipelines into Julia for
+**100x speedups** without the user learning Julia.
+
+Julia has incredible numeric and scientific computing performance, but the
+"time to first plot" problem, package ecosystem confusion, and the two-language
+problem keep scientists on Python. Julianiser eliminates the onboarding cliff.
+
+== How It Works
+
+Describe your data pipeline in a `julianiser.toml` manifest. Julianiser:
+
+1. Analyses your Python/R functions (via AST parsing)
+2. Generates Julia equivalents with proper type annotations
+3. Creates a Zig FFI bridge for calling Julia from your existing code
+4. Handles data marshalling (NumPy arrays ↔ Julia arrays, zero-copy where possible)
+5. Provides fallback: if Julia isn't installed, your Python code still runs
+
+== Key Value
+
+* **Scientists keep their Python notebooks** — Julia runs underneath
+* **100x speedups** on numeric/array code without rewrites
+* **Gradual adoption** — Julianise one function at a time
+
+== Architecture
+
+Follows the hyperpolymath -iser pattern (same as https://github.com/hyperpolymath/chapeliser[Chapeliser]):
+
+* **Manifest** (`julianiser.toml`) — describe WHAT you want
+* **Idris2 ABI** (`src/abi/`) — formal proofs of interface correctness
+* **Zig FFI** (`ffi/zig/`) — C-ABI bridge to target language runtime
+* **Codegen** (`src/codegen/`) — generates target language wrapper code
+* **Rust CLI** — parses manifest, validates, generates, builds, runs
+
+User writes zero target language code. Julianiser generates everything.
+
+Part of the https://github.com/hyperpolymath/iseriser[-iser family] of acceleration frameworks.
+
+== Status
+
+**Pre-alpha.** Architecture defined, scaffolding in place, codegen pending.
+
+== License
+
+SPDX-License-Identifier: PMPL-1.0-or-later
