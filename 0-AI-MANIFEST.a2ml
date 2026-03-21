@@ -1,19 +1,26 @@
-# ⚠️ STOP - CRITICAL READING REQUIRED
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+# STOP - CRITICAL READING REQUIRED
 
 **THIS FILE MUST BE READ FIRST BY ALL AI AGENTS**
 
 ## WHAT IS THIS?
 
-This is the AI manifest for **[YOUR-REPO-NAME]**. It declares:
+This is the AI manifest for **julianiser**. It declares:
 - Canonical file locations (where things MUST be, and nowhere else)
 - Critical invariants (rules that must NEVER be violated)
 - Repository structure and organization
+
+Julianiser analyses Python and R data science code, identifies
+performance-critical array/dataframe operations, and generates
+equivalent Julia modules that deliver 10-100x speedups via LLVM JIT.
 
 ## CANONICAL LOCATIONS (UNIVERSAL RULE)
 
 ### Machine-Readable Metadata: `.machine_readable/` ONLY
 
-These 6 a2ml files MUST exist in `.machine_readable/` directory ONLY:
+These 6 a2ml files MUST exist in `.machine_readable/6a2/` directory ONLY:
 1. **STATE.a2ml** - Project state, progress, blockers
 2. **META.a2ml** - Architecture decisions, governance
 3. **ECOSYSTEM.a2ml** - Position in ecosystem, relationships
@@ -55,7 +62,7 @@ Policy enforcement contracts (k9, dust, lust, must, trust).
 ### AI Configuration & Guides: `.machine_readable/ai/` ONLY
 
 - `AI.a2ml` - Language-specific or LLM-specific patterns
-- `PLACEHOLDERS.md` - Bootstrap guide
+- `PLACEHOLDERS.adoc` - Bootstrap guide
 
 ### Community & Forge Metadata: `.github/` ONLY
 
@@ -70,6 +77,39 @@ Policy enforcement contracts (k9, dust, lust, must, trust).
 
 - `0-AI-MANIFEST.a2ml` - THIS FILE (universal entry point)
 
+## PROJECT-SPECIFIC CONTEXT
+
+### What Julianiser Does
+
+1. Parses Python source (via AST) or R scripts (via R parser)
+2. Identifies array operations, dataframe transformations, numeric hot paths
+3. Generates Julia equivalents with type annotations and broadcasting
+4. Creates a Zig FFI bridge for calling Julia from existing code
+5. Benchmarks original vs. generated code to verify speedup
+
+### Key Translation Patterns
+
+- `pandas.DataFrame` -> `DataFrames.jl`
+- `numpy` arrays -> native Julia arrays (with broadcasting)
+- `scipy` -> Julia stdlib / Optim.jl
+- R `data.frame` -> `DataFrames.jl`
+- 0-based indexing -> 1-based indexing (formally verified remapping)
+
+### Architecture
+
+- **Rust CLI** (`src/main.rs`) — orchestration
+- **Idris2 ABI** (`src/interface/abi/`) — SourceLanguage, DataFrameOperation, ArrayPattern, JuliaType, EquivalenceWitness
+- **Zig FFI** (`src/interface/ffi/`) — C-ABI bridge with Python/R parse + Julia codegen
+- **Codegen** (`src/codegen/`) — Julia code generation from typed IR
+
+### Allowed Languages
+
+Rust, Idris2, Zig, Julia, Scheme, Shell, Just, AsciiDoc, Markdown, Nickel
+
+### Forbidden Languages
+
+TypeScript, Node.js, npm, Python (as implementation language — Python is a *target* for parsing only), Go, Java
+
 ## CORE INVARIANTS
 
 1. **No state file duplication** - Root must NOT contain STATE.a2ml, META.a2ml, etc.
@@ -80,42 +120,44 @@ Policy enforcement contracts (k9, dust, lust, must, trust).
 6. **Container images** - MUST use Chainguard base (`cgr.dev/chainguard/wolfi-base:latest` or `cgr.dev/chainguard/static:latest`)
 7. **Container runtime** - Podman, never Docker. Files are `Containerfile`, never `Dockerfile`
 8. **Container orchestration** - `selur-compose`, never `docker-compose`
+9. **Julia is the target, not the implementation** - Julianiser is written in Rust/Idris2/Zig; it *generates* Julia
 
 ## REPOSITORY STRUCTURE
 
-This repo follows the **Dual-Track** architecture:
-
 ```
-[YOUR-REPO-NAME]/
+julianiser/
 ├── 0-AI-MANIFEST.a2ml         # THIS FILE (start here)
-├── README.adoc                 # High-level orientation (Rich Human)
-├── ROADMAP.adoc                # Future direction
+├── README.adoc                 # What julianiser does, supported patterns, architecture
+├── ROADMAP.adoc                # Phase 0-6 development plan
+├── TOPOLOGY.md                 # Module map and data flow
 ├── CONTRIBUTING.adoc           # Human contribution guide
-├── GOVERNANCE.adoc             # Decision-making model
 ├── Justfile                    # Task runner
 ├── Containerfile               # OCI build
-├── LICENSE                     # Primary license
+├── Cargo.toml                  # Rust dependencies
+├── LICENSE                     # PMPL-1.0-or-later
 ├── src/                        # Source code
+│   ├── main.rs                 # CLI (init, validate, generate, build, run, info)
+│   ├── lib.rs                  # Library API
+│   ├── manifest/mod.rs         # julianiser.toml parser
+│   ├── codegen/mod.rs          # Julia code generation engine
+│   ├── abi/mod.rs              # Rust-side ABI types
 │   └── interface/              # Verified Interface Seams
-│       ├── abi/                # Idris2 ABI (The Spec)
-│       ├── ffi/                # Zig FFI (The Bridge)
-│       └── generated/          # C Headers (The Result)
+│       ├── abi/                # Idris2 ABI (Types, Layout, Foreign)
+│       ├── ffi/                # Zig FFI (parse, codegen, benchmark)
+│       └── generated/          # Auto-generated C headers
 ├── container/                  # Stapeln container ecosystem
-├── docs/                       # Technical depths
-│   ├── attribution/            # Citations, owners, maintainers (adoc)
-│   ├── architecture/           # Topology, diagrams
-│   ├── theory/                 # Domain theory
-│   └── practice/               # Manuals
-├── docs/legal/                  # Legal exhibits and full texts
+├── verification/               # Proofs, benchmarks, fuzzing, safety cases
+├── docs/                       # Architecture, theory, governance, legal
 └── .machine_readable/          # ALL machine-readable metadata
+    └── 6a2/                    # STATE, META, ECOSYSTEM, AGENTIC, NEUROSYM, PLAYBOOK
 ```
 
 ## SESSION STARTUP CHECKLIST
 
-✅ Read THIS file (0-AI-MANIFEST.a2ml) first
-✅ Understand canonical location: `.machine_readable/`
-✅ State understanding of canonical locations
+Read THIS file (0-AI-MANIFEST.a2ml) first
+Understand canonical location: `.machine_readable/`
+State understanding of canonical locations
 
 ## ATTESTATION PROOF
 
-**"I have read the AI manifest. All machine-readable content (state files, anchors, policies, bot directives, contractiles, AI guides) is located in `.machine_readable/` ONLY, and community metadata is in `.github/`. I will not create duplicate files in the root directory."**
+**"I have read the AI manifest for julianiser. All machine-readable content (state files, anchors, policies, bot directives, contractiles, AI guides) is located in `.machine_readable/` ONLY, and community metadata is in `.github/`. I will not create duplicate files in the root directory."**

@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# AGENTIC.a2ml — AI agent constraints and capabilities
+# AGENTIC.a2ml — AI agent constraints and capabilities for julianiser
 # Defines what AI agents can and cannot do in this repository.
 
 [metadata]
 version = "0.1.0"
-last-updated = "{{CURRENT_DATE}}"
+last-updated = "2026-03-21"
 
 [agent-permissions]
 can-edit-source = true
@@ -19,9 +19,17 @@ can-create-files = true
 # What AI agents must NOT do:
 # - Never use banned language patterns (believe_me, unsafeCoerce, etc.)
 # - Never commit secrets or credentials
-# - Never use banned languages (TypeScript, Python, Go, etc.)
+# - Never use banned languages (TypeScript, Python, Go, etc.) as implementation
 # - Never place state files in repository root (must be in .machine_readable/)
 # - Never use AGPL license (use PMPL-1.0-or-later)
+# - Never write Julia by hand in this repo (Julia is only generated output)
+# - Never confuse "parsing Python" with "using Python" — julianiser parses Python source but is written in Rust/Idris2/Zig
+
+[julianiser-specific]
+# Python/R are source-language targets (we parse them), not implementation languages
+# Julia is the output language (we generate it), not hand-written here
+# Idris2 ABI types: SourceLanguage, DataFrameOperation, ArrayPattern, JuliaType, EquivalenceWitness
+# Zig FFI functions: julianiser_parse_python, julianiser_parse_r, julianiser_codegen, julianiser_benchmark
 
 [maintenance-integrity]
 fail-closed = true

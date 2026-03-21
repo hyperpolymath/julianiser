@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# NEUROSYM.a2ml — Neurosymbolic integration metadata
+# NEUROSYM.a2ml — Neurosymbolic integration metadata for julianiser
 # Configuration for Hypatia scanning and symbolic reasoning.
 
 [metadata]
 version = "0.1.0"
-last-updated = "{{CURRENT_DATE}}"
+last-updated = "2026-03-21"
 
 [hypatia-config]
 scan-enabled = true
@@ -14,10 +14,14 @@ scan-depth = "standard"  # quick | standard | deep
 report-format = "logtalk"
 
 [symbolic-rules]
-# Custom symbolic rules for this project
-# - { name = "no-unsafe-ffi", pattern = "believe_me|unsafeCoerce", severity = "critical" }
+# Custom symbolic rules for julianiser
+# - Verify Idris2 ABI types match Zig FFI struct definitions
+# - Verify Julia codegen patterns produce valid Julia syntax
+# - Check EquivalenceWitness coverage for all translated patterns
+# - Detect 0-based to 1-based index remapping omissions
 
 [neural-config]
-# Neural pattern detection settings
+# Neural pattern detection for identifying translatable Python/R code
 # confidence-threshold = 0.85
 # model = "hypatia-v2"
+# patterns = ["pandas-dataframe-ops", "numpy-array-ops", "scipy-calls", "r-dplyr-verbs"]

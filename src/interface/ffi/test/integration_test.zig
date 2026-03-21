@@ -1,79 +1,177 @@
-// {{PROJECT}} Integration Tests
+// Julianiser Integration Tests
 // SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 //
 // These tests verify that the Zig FFI correctly implements the Idris2 ABI
+// for julianiser's Python/R parsing and Julia code generation pipeline.
 
 const std = @import("std");
 const testing = std.testing;
 
-// Import FFI functions
-extern fn {{project}}_init() ?*opaque {};
-extern fn {{project}}_free(?*opaque {}) void;
-extern fn {{project}}_process(?*opaque {}, u32) c_int;
-extern fn {{project}}_get_string(?*opaque {}) ?[*:0]const u8;
-extern fn {{project}}_free_string(?[*:0]const u8) void;
-extern fn {{project}}_last_error() ?[*:0]const u8;
-extern fn {{project}}_version() [*:0]const u8;
-extern fn {{project}}_is_initialized(?*opaque {}) u32;
+// Import julianiser FFI functions
+extern fn julianiser_init() ?*anyopaque;
+extern fn julianiser_free(?*anyopaque) void;
+extern fn julianiser_parse_python(?*anyopaque, ?[*]const u8, u32) c_int;
+extern fn julianiser_parse_r(?*anyopaque, ?[*]const u8, u32) c_int;
+extern fn julianiser_node_count(?*anyopaque) u32;
+extern fn julianiser_codegen(?*anyopaque) c_int;
+extern fn julianiser_get_julia_code(?*anyopaque) ?[*:0]const u8;
+extern fn julianiser_free_string(?[*:0]const u8) void;
+extern fn julianiser_benchmark(?*anyopaque, u32) c_int;
+extern fn julianiser_get_speedup(?*anyopaque) f64;
+extern fn julianiser_last_error() ?[*:0]const u8;
+extern fn julianiser_version() [*:0]const u8;
+extern fn julianiser_build_info() [*:0]const u8;
+extern fn julianiser_is_initialized(?*anyopaque) u32;
 
 //==============================================================================
 // Lifecycle Tests
 //==============================================================================
 
-test "create and destroy handle" {
-    const handle = {{project}}_init() orelse return error.InitFailed;
-    defer {{project}}_free(handle);
+test "create and destroy session" {
+    const handle = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(handle);
 
     try testing.expect(handle != null);
 }
 
-test "handle is initialized" {
-    const handle = {{project}}_init() orelse return error.InitFailed;
-    defer {{project}}_free(handle);
+test "session is initialized after creation" {
+    const handle = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(handle);
 
-    const initialized = {{project}}_is_initialized(handle);
+    const initialized = julianiser_is_initialized(handle);
     try testing.expectEqual(@as(u32, 1), initialized);
 }
 
 test "null handle is not initialized" {
-    const initialized = {{project}}_is_initialized(null);
+    const initialized = julianiser_is_initialized(null);
     try testing.expectEqual(@as(u32, 0), initialized);
 }
 
 //==============================================================================
-// Operation Tests
+// Python Parsing Tests
 //==============================================================================
 
-test "process with valid handle" {
-    const handle = {{project}}_init() orelse return error.InitFailed;
-    defer {{project}}_free(handle);
+test "parse python with valid path" {
+    const handle = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(handle);
 
-    const result = {{project}}_process(handle, 42);
-    try testing.expectEqual(@as(c_int, 0), result); // 0 = ok
+    const path = "examples/pipeline.py";
+    const result = julianiser_parse_python(handle, path.ptr, @intCast(path.len));
+    try testing.expectEqual(@as(c_int, 0), result); // ok
 }
 
-test "process with null handle returns error" {
-    const result = {{project}}_process(null, 42);
-    try testing.expectEqual(@as(c_int, 4), result); // 4 = null_pointer
+test "parse python with null handle returns error" {
+    const path = "test.py";
+    const result = julianiser_parse_python(null, path.ptr, @intCast(path.len));
+    try testing.expectEqual(@as(c_int, 4), result); // null_pointer
+}
+
+test "parse python with null path returns error" {
+    const handle = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(handle);
+
+    const result = julianiser_parse_python(handle, null, 0);
+    try testing.expectEqual(@as(c_int, 2), result); // invalid_param
 }
 
 //==============================================================================
-// String Tests
+// R Parsing Tests
 //==============================================================================
 
-test "get string result" {
-    const handle = {{project}}_init() orelse return error.InitFailed;
-    defer {{project}}_free(handle);
+test "parse R with valid path" {
+    const handle = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(handle);
 
-    const str = {{project}}_get_string(handle);
-    defer if (str) |s| {{project}}_free_string(s);
-
-    try testing.expect(str != null);
+    const path = "examples/analysis.R";
+    const result = julianiser_parse_r(handle, path.ptr, @intCast(path.len));
+    try testing.expectEqual(@as(c_int, 0), result); // ok
 }
 
-test "get string with null handle" {
-    const str = {{project}}_get_string(null);
-    try testing.expect(str == null);
+//==============================================================================
+// Code Generation Tests
+//==============================================================================
+
+test "codegen without parsing fails" {
+    const handle = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(handle);
+
+    const result = julianiser_codegen(handle);
+    try testing.expectEqual(@as(c_int, 6), result); // codegen_error
+}
+
+test "codegen after python parse succeeds" {
+    const handle = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(handle);
+
+    const path = "test.py";
+    _ = julianiser_parse_python(handle, path.ptr, @intCast(path.len));
+
+    const result = julianiser_codegen(handle);
+    try testing.expectEqual(@as(c_int, 0), result); // ok
+}
+
+test "get julia code after codegen" {
+    const handle = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(handle);
+
+    const path = "test.py";
+    _ = julianiser_parse_python(handle, path.ptr, @intCast(path.len));
+    _ = julianiser_codegen(handle);
+
+    const code = julianiser_get_julia_code(handle);
+    defer if (code) |c| julianiser_free_string(c);
+
+    try testing.expect(code != null);
+    if (code) |c| {
+        const code_str = std.mem.span(c);
+        try testing.expect(code_str.len > 0);
+    }
+}
+
+test "get julia code without codegen returns null" {
+    const handle = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(handle);
+
+    const code = julianiser_get_julia_code(handle);
+    try testing.expect(code == null);
+}
+
+//==============================================================================
+// Benchmark Tests
+//==============================================================================
+
+test "benchmark without codegen fails" {
+    const handle = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(handle);
+
+    const result = julianiser_benchmark(handle, 10);
+    try testing.expectEqual(@as(c_int, 1), result); // error
+}
+
+test "benchmark after codegen succeeds" {
+    const handle = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(handle);
+
+    const path = "test.py";
+    _ = julianiser_parse_python(handle, path.ptr, @intCast(path.len));
+    _ = julianiser_codegen(handle);
+
+    const result = julianiser_benchmark(handle, 10);
+    try testing.expectEqual(@as(c_int, 0), result); // ok
+}
+
+test "speedup after benchmark is non-negative" {
+    const handle = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(handle);
+
+    const path = "test.py";
+    _ = julianiser_parse_python(handle, path.ptr, @intCast(path.len));
+    _ = julianiser_codegen(handle);
+    _ = julianiser_benchmark(handle, 5);
+
+    const speedup = julianiser_get_speedup(handle);
+    try testing.expect(speedup >= 0.0);
 }
 
 //==============================================================================
@@ -81,9 +179,9 @@ test "get string with null handle" {
 //==============================================================================
 
 test "last error after null handle operation" {
-    _ = {{project}}_process(null, 0);
+    _ = julianiser_codegen(null);
 
-    const err = {{project}}_last_error();
+    const err = julianiser_last_error();
     try testing.expect(err != null);
 
     if (err) |e| {
@@ -92,91 +190,48 @@ test "last error after null handle operation" {
     }
 }
 
-test "no error after successful operation" {
-    const handle = {{project}}_init() orelse return error.InitFailed;
-    defer {{project}}_free(handle);
-
-    _ = {{project}}_process(handle, 0);
-
-    // Error should be cleared after successful operation
-    // (This depends on implementation)
-}
-
 //==============================================================================
 // Version Tests
 //==============================================================================
 
 test "version string is not empty" {
-    const ver = {{project}}_version();
+    const ver = julianiser_version();
     const ver_str = std.mem.span(ver);
-
     try testing.expect(ver_str.len > 0);
 }
 
 test "version string is semantic version format" {
-    const ver = {{project}}_version();
+    const ver = julianiser_version();
     const ver_str = std.mem.span(ver);
-
-    // Should be in format X.Y.Z
     try testing.expect(std.mem.count(u8, ver_str, ".") >= 1);
+}
+
+test "build info is not empty" {
+    const info = julianiser_build_info();
+    const info_str = std.mem.span(info);
+    try testing.expect(info_str.len > 0);
 }
 
 //==============================================================================
 // Memory Safety Tests
 //==============================================================================
 
-test "multiple handles are independent" {
-    const h1 = {{project}}_init() orelse return error.InitFailed;
-    defer {{project}}_free(h1);
+test "multiple sessions are independent" {
+    const h1 = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(h1);
 
-    const h2 = {{project}}_init() orelse return error.InitFailed;
-    defer {{project}}_free(h2);
+    const h2 = julianiser_init() orelse return error.InitFailed;
+    defer julianiser_free(h2);
 
     try testing.expect(h1 != h2);
 
-    // Operations on h1 should not affect h2
-    _ = {{project}}_process(h1, 1);
-    _ = {{project}}_process(h2, 2);
-}
-
-test "double free is safe" {
-    const handle = {{project}}_init() orelse return error.InitFailed;
-
-    {{project}}_free(handle);
-    {{project}}_free(handle); // Should not crash
+    // Parse different languages in each session
+    const py_path = "test.py";
+    const r_path = "test.R";
+    _ = julianiser_parse_python(h1, py_path.ptr, @intCast(py_path.len));
+    _ = julianiser_parse_r(h2, r_path.ptr, @intCast(r_path.len));
 }
 
 test "free null is safe" {
-    {{project}}_free(null); // Should not crash
-}
-
-//==============================================================================
-// Thread Safety Tests (if applicable)
-//==============================================================================
-
-test "concurrent operations" {
-    const handle = {{project}}_init() orelse return error.InitFailed;
-    defer {{project}}_free(handle);
-
-    const ThreadContext = struct {
-        h: *opaque {},
-        id: u32,
-    };
-
-    const thread_fn = struct {
-        fn run(ctx: ThreadContext) void {
-            _ = {{project}}_process(ctx.h, ctx.id);
-        }
-    }.run;
-
-    var threads: [4]std.Thread = undefined;
-    for (&threads, 0..) |*thread, i| {
-        thread.* = try std.Thread.spawn(.{}, thread_fn, .{
-            ThreadContext{ .h = handle, .id = @intCast(i) },
-        });
-    }
-
-    for (threads) |thread| {
-        thread.join();
-    }
+    julianiser_free(null); // Must not crash
 }

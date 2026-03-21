@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# ANCHOR.a2ml - authoritative anchor for this repository
+# ANCHOR.a2ml - authoritative anchor for julianiser
 
 [metadata]
 version = "1.0.0"
-last-updated = "{{CURRENT_DATE}}"
+last-updated = "2026-03-21"
 
 [anchor]
 schema = "hyperpolymath.anchor/1"
@@ -13,38 +13,43 @@ repo = "hyperpolymath/julianiser"
 authority = "upstream-canonical"
 
 purpose = [
-  "Define canonical semantics and policy boundaries for this repository.",
-  "Declare what downstream/satellite repos can extend but not redefine.",
-  "Provide a stable golden path and invariant contract for release readiness.",
+  "Define canonical semantics for Python/R to Julia translation.",
+  "Declare supported translation patterns (pandas, numpy, scipy, R dplyr).",
+  "Provide equivalence proof contracts between source and generated code.",
+  "Establish benchmark correctness criteria for generated Julia modules.",
 ]
 
 [identity]
-project = "{{PROJECT_NAME}}"
-kind = "{{PROJECT_KIND}}"                # language | library | service | tool
-one-sentence = "{{PROJECT_PURPOSE}}"
-domain = "{{PROJECT_DOMAIN}}"
+project = "julianiser"
+kind = "tool"
+one-sentence = "Analyse Python/R data pipelines and generate drop-in Julia replacements for 10-100x speedups"
+domain = "data-science-acceleration"
 
 [semantic-authority]
 policy = "canonical"
 
 owns = [
-  "Project semantics and specification",
-  "Invariant definitions and contractiles",
-  "Reference implementation behavior",
+  "Python-to-Julia translation patterns and their equivalence proofs",
+  "R-to-Julia translation patterns and their equivalence proofs",
+  "julianiser.toml manifest schema",
+  "Benchmark correctness criteria (output tolerance, speedup thresholds)",
+  "Index remapping correctness (0-based to 1-based)",
 ]
 
 [implementation-policy]
-allowed = ["Rust", "Idris2", "Zig", "Scheme", "Shell", "Just", "AsciiDoc", "Markdown"]
-forbidden = ["Node.js", "npm"]
+allowed = ["Rust", "Idris2", "Zig", "Julia", "Scheme", "Shell", "Just", "AsciiDoc", "Markdown"]
+forbidden = ["Node.js", "npm", "TypeScript", "Python", "Go"]
+# Note: Python is forbidden as implementation language but is a parse TARGET
 
 [golden-path]
 smoke-test-command = [
-  "just test",
+  "cargo test",
   "just quality",
 ]
 
 success-criteria = [
-  "Core tests pass",
+  "Rust unit tests pass (manifest parsing, codegen)",
+  "Zig FFI tests pass (struct size assertions, lifecycle)",
   "Quality gates pass",
   "No unresolved critical security findings",
 ]
@@ -54,9 +59,3 @@ must-pin-upstream = true
 must-declare-authority = true
 must-have-anchor = true
 must-have-golden-path = true
-
-[semantic-authority-files]
-language-spec = "SPECIFICATION.md"
-formal-proofs = "docs/proofs/PROOFS.adoc"
-type-theory = "docs/theory/THEORY.adoc"
-algorithms = "docs/theory/ALGORITHMS.adoc"

@@ -6,13 +6,14 @@
   (version "0.1.0")
   (name "julianiser")
   (type "tool")
-  (purpose "Auto-wrap Python/R data pipelines into Julia for 100x speedups")
+  (purpose "Analyse Python/R data pipelines and generate drop-in Julia replacements for 10-100x speedups via LLVM JIT")
 
   (position-in-ecosystem
     (family "-iser acceleration frameworks")
     (meta-framework "iseriser")
     (relationship "sibling")
-    (top-3 ("typedqliser" "chapeliser" "verisimiser")))
+    (top-3 ("typedqliser" "chapeliser" "verisimiser"))
+    (unique-value "Julia's multiple dispatch and LLVM JIT give 10-100x speedups on numeric/array code without the two-language problem"))
 
   (related-projects
     (project "iseriser"
@@ -27,12 +28,37 @@
     (project "verisimiser"
       (relationship "sibling-priority-3")
       (description "VeriSimDB octad database augmentation"))
+    (project "halideiser"
+      (relationship "sibling")
+      (description "Halide image processing acceleration"))
+    (project "futharkiser"
+      (relationship "sibling")
+      (description "Futhark GPU array programming acceleration"))
     (project "squeakwell"
       (relationship "sibling")
       (description "Database recovery via constraint propagation"))
     (project "proven"
       (relationship "dependency")
-      (description "Shared Idris2 verified library"))
+      (description "Shared Idris2 verified library for formal proofs"))
     (project "typell"
       (relationship "dependency")
-      (description "Type theory engine"))))
+      (description "Type theory engine used by ABI layer"))
+    (project "panll"
+      (relationship "integration")
+      (description "Panel framework for interactive julianiser workflows"))
+    (project "boj-server"
+      (relationship "integration")
+      (description "Cartridge host for remote julianiser execution"))
+    (project "verisimdb"
+      (relationship "integration")
+      (description "Storage backend for benchmark results and regression tracking")))
+
+  (target-ecosystem
+    (description "Data scientists using Python (pandas, numpy, scipy) and R (dplyr, tidyr, ggplot2)")
+    (julia-packages
+      (package "DataFrames.jl" (maps-from "pandas DataFrame, R data.frame"))
+      (package "Plots.jl" (maps-from "matplotlib, ggplot2"))
+      (package "Optim.jl" (maps-from "scipy.optimize"))
+      (package "MLJ.jl" (maps-from "scikit-learn"))
+      (package "CUDA.jl" (maps-from "GPU acceleration target"))
+      (package "Distributed.jl" (maps-from "HPC/cluster target")))))

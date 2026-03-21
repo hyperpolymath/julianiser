@@ -1,32 +1,63 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
-= julianiser Roadmap
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+= Julianiser Roadmap
 :toc:
 :icons: font
 
 == Phase 0: Scaffold (COMPLETE)
-* [x] RSR template with full CI/CD
-* [x] CLI with subcommands
-* [x] Manifest parser
+* [x] RSR template with full CI/CD (17 workflows)
+* [x] Rust CLI with subcommands (init, validate, generate, build, run, info)
+* [x] Manifest parser (`julianiser.toml`)
 * [x] Codegen stubs
-* [x] ABI module stubs
+* [x] Idris2 ABI module stubs (Types, Layout, Foreign)
+* [x] Zig FFI bridge stubs
 * [x] README with architecture
 
-== Phase 1: Core Implementation
-* [ ] Implement target-language-specific code generation
-* [ ] Write Idris2 ABI proofs for core invariants
-* [ ] Build Zig FFI bridge
-* [ ] First working end-to-end example
-* [ ] Integration tests
+== Phase 1: Python AST Parser
+* [ ] Python AST ingestion (parse `.py` files into typed IR)
+* [ ] Identify pandas DataFrame operations (select, filter, groupby, join, agg)
+* [ ] Identify numpy array patterns (broadcasting, slicing, linear algebra)
+* [ ] Identify scipy calls (optimize, interpolate, signal)
+* [ ] Build typed intermediate representation of data flow
+* [ ] Unit tests against real-world Python data science scripts
 
-== Phase 2: Polish
-* [ ] Error messages and diagnostics
+== Phase 2: Julia Code Generation — Arrays and DataFrames
+* [ ] Generate Julia type annotations from inferred Python types
+* [ ] Translate numpy arrays to native Julia arrays with broadcasting
+* [ ] Translate pandas DataFrames to DataFrames.jl operations
+* [ ] Generate in-place variants (`mul!`, `ldiv!`) where applicable
+* [ ] Handle Python slicing to Julia indexing (0-based to 1-based)
+* [ ] Generate Julia `module` wrappers with exported API matching Python signatures
+* [ ] First working end-to-end example (pandas pipeline to DataFrames.jl)
+
+== Phase 3: R Parser
+* [ ] R script parser (function definitions, apply/sapply/lapply)
+* [ ] Identify `data.frame` / `tibble` operations
+* [ ] Map dplyr verbs (mutate, filter, select, summarise, group_by) to DataFrames.jl
+* [ ] Identify R's vectorised operations and translate to Julia broadcasting
+* [ ] Handle R formula syntax where applicable
+
+== Phase 4: Benchmark Harness
+* [ ] Automated benchmark comparison (original Python/R vs. generated Julia)
+* [ ] Wall-clock timing with statistical significance (multiple runs, confidence intervals)
+* [ ] Memory usage comparison (peak RSS)
+* [ ] Output correctness validation (numerical diff within tolerance)
+* [ ] Generate benchmark report (AsciiDoc + JSON for CI)
+* [ ] Regression detection: alert if generated Julia is slower than previous run
+
+== Phase 5: Idris2 Equivalence Proofs
+* [ ] Prove type-level equivalence between Python operations and Julia codegen
+* [ ] SourceLanguage / JuliaType mapping proofs
+* [ ] DataFrameOperation equivalence witnesses (e.g., groupby commutativity)
+* [ ] ArrayPattern translation correctness (broadcasting laws)
+* [ ] Prove index remapping correctness (0-based to 1-based)
+* [ ] Integration with `proven` shared library
+
+== Phase 6: Ecosystem Integration
+* [ ] PanLL panel for interactive julianiser workflow
+* [ ] BoJ-server cartridge for remote execution
+* [ ] VeriSimDB backing store for benchmark results
 * [ ] Shell completions (bash, zsh, fish)
-* [ ] CI/CD for the generated artifacts
-* [ ] Performance benchmarks
-* [ ] Additional examples
-
-== Phase 3: Ecosystem
-* [ ] PanLL panel integration
-* [ ] BoJ-server cartridge
-* [ ] VeriSimDB backing store for results
+* [ ] Error messages and diagnostics with source-location hints
 * [ ] Publish to crates.io
+* [ ] CI/CD for generated Julia artifacts (test generated code in CI)
