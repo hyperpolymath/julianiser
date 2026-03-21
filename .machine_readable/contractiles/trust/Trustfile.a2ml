@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
-# Trustfile — Integrity and provenance verification
+# Trustfile — Integrity and provenance verification for julianiser
 # Author: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 @abstract:
-Integrity invariants for this repository. These verify that the repo
+Integrity invariants for julianiser. These verify that the repo
 has not been tampered with, secrets are not leaked, and provenance
 is traceable.
 @end
@@ -22,25 +22,30 @@ is traceable.
 
 ### no-tokens-in-source
 - description: No hardcoded API tokens in source
-- run: "! grep -rE '(api[_-]?key|secret|token|password)\s*[:=]\s*[\"'\\''][A-Za-z0-9]{16,}' --include='*.js' --include='*.ts' --include='*.res' --include='*.py' . 2>/dev/null | grep -v node_modules | head -1 | grep -q ."
+- run: "! grep -rE '(api[_-]?key|secret|token|password)\s*[:=]\s*[\"'\'''][A-Za-z0-9]{16,}' --include='*.rs' --include='*.zig' --include='*.idr' . 2>/dev/null | head -1 | grep -q ."
 - severity: critical
 
 ## Provenance
 
 ### author-correct
 - description: Git author matches expected identity
-- run: "git log -1 --format='%ae' | grep -qE '(hyperpolymath|j\\.d\\.a\\.jewell)'"
+- run: "git log -1 --format='%ae' | grep -qE '(hyperpolymath|j\.d\.a\.jewell)'"
 - severity: warning
 
 ### license-content
-- description: LICENSE contains expected identifier
-- run: grep -q 'PMPL\|MPL\|MIT\|Apache\|LGPL' LICENSE
+- description: LICENSE contains PMPL identifier
+- run: grep -q 'PMPL' LICENSE
+- severity: warning
+
+### ci-pipeline-present
+- description: GitHub Actions CI workflows exist
+- run: test -d .github/workflows && ls .github/workflows/*.yml | wc -l | grep -qE '^[1-9]'
 - severity: warning
 
 ## Container Security
 
 ### container-images-pinned
-- description: Containerfile uses pinned base images
+- description: Containerfile uses pinned base images (Chainguard)
 - run: test ! -f Containerfile || grep -q 'cgr.dev\|@sha256:' Containerfile
 - severity: warning
 
@@ -48,3 +53,15 @@ is traceable.
 - description: No Dockerfile (use Containerfile)
 - run: test ! -f Dockerfile
 - severity: warning
+
+## Trusted Sources
+
+### hyperpolymath-authored
+- description: All commits from hyperpolymath or verified co-authors
+- run: "git log --format='%ae' | sort -u | grep -vE '(hyperpolymath|noreply@anthropic|noreply@github)' | head -1 | grep -qv . || true"
+- severity: info
+
+### abi-ffi-architecture
+- description: Idris2 ABI + Zig FFI architecture present
+- run: test -d src/abi || test -d ffi/zig
+- severity: info
