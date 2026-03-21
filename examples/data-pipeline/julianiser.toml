@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# julianiser manifest — Example data pipeline translation
+#
+# This example demonstrates translating a Python pandas/numpy pipeline
+# and an R dplyr/ggplot2 analysis script into Julia equivalents.
+
+[project]
+name = "data-pipeline-example"
+version = "0.1.0"
+description = "Example: translate Python and R data pipelines to Julia"
+
+[[sources]]
+path = "pipeline.py"
+language = "python"
+
+[[sources]]
+path = "analysis.R"
+language = "r"
+
+[[mappings]]
+from-lib = "pandas"
+to-lib = "DataFrames.jl"
+
+[[mappings]]
+from-lib = "numpy"
+to-lib = "Base"
+
+[[mappings]]
+from-lib = "dplyr"
+to-lib = "DataFrames.jl"
+
+[[mappings]]
+from-lib = "ggplot2"
+to-lib = "Plots.jl"
+
+[julia]
+version = "1.10"
+packages = ["DataFrames", "CSV", "Statistics", "LinearAlgebra", "Plots", "BenchmarkTools"]
