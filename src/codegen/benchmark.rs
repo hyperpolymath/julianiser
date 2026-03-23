@@ -92,13 +92,23 @@ fn generate_julia_benchmark(manifest: &Manifest, units: &[TranslationUnit]) -> S
 
     // Include each generated module.
     for unit in units {
-        writeln!(out, "include(\"../{}\")  # from {}", unit.output_path, unit.source_path).unwrap();
+        writeln!(
+            out,
+            "include(\"../{}\")  # from {}",
+            unit.output_path, unit.source_path
+        )
+        .unwrap();
         writeln!(out, "using .{}", unit.module_name).unwrap();
     }
     writeln!(out).unwrap();
 
     writeln!(out, "println(\"=\"^60)").unwrap();
-    writeln!(out, "println(\"julianiser Benchmark: {}\")  ", manifest.project.name).unwrap();
+    writeln!(
+        out,
+        "println(\"julianiser Benchmark: {}\")  ",
+        manifest.project.name
+    )
+    .unwrap();
     writeln!(out, "println(\"=\"^60)").unwrap();
     writeln!(out).unwrap();
 
@@ -108,7 +118,12 @@ fn generate_julia_benchmark(manifest: &Manifest, units: &[TranslationUnit]) -> S
         writeln!(out, "try").unwrap();
         writeln!(out, "    {}.run_pipeline()", unit.module_name).unwrap();
         writeln!(out, "catch e").unwrap();
-        writeln!(out, "    @warn \"Warm-up failed for {}: $e\"", unit.module_name).unwrap();
+        writeln!(
+            out,
+            "    @warn \"Warm-up failed for {}: $e\"",
+            unit.module_name
+        )
+        .unwrap();
         writeln!(out, "end").unwrap();
     }
     writeln!(out).unwrap();
@@ -119,8 +134,19 @@ fn generate_julia_benchmark(manifest: &Manifest, units: &[TranslationUnit]) -> S
 
     // Benchmark each module.
     for unit in units {
-        writeln!(out, "println(\"\\nBenchmark: {} (from {})\")  ", unit.module_name, unit.source_path).unwrap();
-        writeln!(out, "bench_{} = @benchmark {}.run_pipeline()", to_snake(&unit.module_name), unit.module_name).unwrap();
+        writeln!(
+            out,
+            "println(\"\\nBenchmark: {} (from {})\")  ",
+            unit.module_name, unit.source_path
+        )
+        .unwrap();
+        writeln!(
+            out,
+            "bench_{} = @benchmark {}.run_pipeline()",
+            to_snake(&unit.module_name),
+            unit.module_name
+        )
+        .unwrap();
         writeln!(out, "display(bench_{})", to_snake(&unit.module_name)).unwrap();
         writeln!(out, "println()").unwrap();
         writeln!(out).unwrap();
@@ -139,8 +165,20 @@ fn generate_julia_benchmark(manifest: &Manifest, units: &[TranslationUnit]) -> S
         ).unwrap();
     }
     writeln!(out).unwrap();
-    writeln!(out, "println(\"\\nCompare these with your original {} timings.\")  ", units.first().map(|u| u.language.to_string()).unwrap_or_default()).unwrap();
-    writeln!(out, "println(\"Julia's JIT typically delivers 10-100x speedup on array/DataFrame operations.\")").unwrap();
+    writeln!(
+        out,
+        "println(\"\\nCompare these with your original {} timings.\")  ",
+        units
+            .first()
+            .map(|u| u.language.to_string())
+            .unwrap_or_default()
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "println(\"Julia's JIT typically delivers 10-100x speedup on array/DataFrame operations.\")"
+    )
+    .unwrap();
 
     out
 }
@@ -162,29 +200,46 @@ fn generate_benchmark_runner(manifest: &Manifest, units: &[TranslationUnit]) -> 
     writeln!(out, "set -euo pipefail").unwrap();
     writeln!(out).unwrap();
 
-    writeln!(out, "SCRIPT_DIR=\"$(cd \"$(dirname \"${{BASH_SOURCE[0]}}\")\" && pwd)\"").unwrap();
+    writeln!(
+        out,
+        "SCRIPT_DIR=\"$(cd \"$(dirname \"${{BASH_SOURCE[0]}}\")\" && pwd)\""
+    )
+    .unwrap();
     writeln!(out, "PROJECT_DIR=\"$(dirname \"$SCRIPT_DIR\")\"").unwrap();
     writeln!(out).unwrap();
 
-    writeln!(out, "echo \"============================================================\"").unwrap();
-    writeln!(out, "echo \"julianiser Benchmark Runner: {}\"", manifest.project.name).unwrap();
-    writeln!(out, "echo \"============================================================\"").unwrap();
+    writeln!(
+        out,
+        "echo \"============================================================\""
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "echo \"julianiser Benchmark Runner: {}\"",
+        manifest.project.name
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "echo \"============================================================\""
+    )
+    .unwrap();
     writeln!(out).unwrap();
 
     // Run original source files.
     for unit in units {
         writeln!(out, "echo \"\"").unwrap();
-        writeln!(out, "echo \"--- Original: {} ({}) ---\"", unit.source_path, unit.language).unwrap();
+        writeln!(
+            out,
+            "echo \"--- Original: {} ({}) ---\"",
+            unit.source_path, unit.language
+        )
+        .unwrap();
 
         match unit.language {
             SourceLanguage::Python => {
                 writeln!(out, "if command -v python3 &> /dev/null; then").unwrap();
-                writeln!(
-                    out,
-                    "    echo \"Timing: python3 {}\"",
-                    unit.source_path
-                )
-                .unwrap();
+                writeln!(out, "    echo \"Timing: python3 {}\"", unit.source_path).unwrap();
                 writeln!(
                     out,
                     "    time python3 \"$PROJECT_DIR/../{}\" 2>&1 || echo \"  (Python script failed or not found)\"",
@@ -192,17 +247,16 @@ fn generate_benchmark_runner(manifest: &Manifest, units: &[TranslationUnit]) -> 
                 )
                 .unwrap();
                 writeln!(out, "else").unwrap();
-                writeln!(out, "    echo \"  python3 not found — skipping original benchmark\"").unwrap();
+                writeln!(
+                    out,
+                    "    echo \"  python3 not found — skipping original benchmark\""
+                )
+                .unwrap();
                 writeln!(out, "fi").unwrap();
             }
             SourceLanguage::R => {
                 writeln!(out, "if command -v Rscript &> /dev/null; then").unwrap();
-                writeln!(
-                    out,
-                    "    echo \"Timing: Rscript {}\"",
-                    unit.source_path
-                )
-                .unwrap();
+                writeln!(out, "    echo \"Timing: Rscript {}\"", unit.source_path).unwrap();
                 writeln!(
                     out,
                     "    time Rscript \"$PROJECT_DIR/../{}\" 2>&1 || echo \"  (R script failed or not found)\"",
@@ -210,7 +264,11 @@ fn generate_benchmark_runner(manifest: &Manifest, units: &[TranslationUnit]) -> 
                 )
                 .unwrap();
                 writeln!(out, "else").unwrap();
-                writeln!(out, "    echo \"  Rscript not found — skipping original benchmark\"").unwrap();
+                writeln!(
+                    out,
+                    "    echo \"  Rscript not found — skipping original benchmark\""
+                )
+                .unwrap();
                 writeln!(out, "fi").unwrap();
             }
         }
@@ -220,19 +278,48 @@ fn generate_benchmark_runner(manifest: &Manifest, units: &[TranslationUnit]) -> 
     writeln!(out, "echo \"\"").unwrap();
     writeln!(out, "echo \"--- Julia (generated) ---\"").unwrap();
     writeln!(out, "if command -v julia &> /dev/null; then").unwrap();
-    writeln!(out, "    echo \"Running Julia benchmark (includes JIT compilation)...\"").unwrap();
-    writeln!(out, "    time julia --project=\"$PROJECT_DIR\" \"$SCRIPT_DIR/benchmark.jl\" 2>&1").unwrap();
+    writeln!(
+        out,
+        "    echo \"Running Julia benchmark (includes JIT compilation)...\""
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "    time julia --project=\"$PROJECT_DIR\" \"$SCRIPT_DIR/benchmark.jl\" 2>&1"
+    )
+    .unwrap();
     writeln!(out, "else").unwrap();
-    writeln!(out, "    echo \"  julia not found — install Julia >= {} to run benchmarks\"", manifest.julia.version).unwrap();
+    writeln!(
+        out,
+        "    echo \"  julia not found — install Julia >= {} to run benchmarks\"",
+        manifest.julia.version
+    )
+    .unwrap();
     writeln!(out, "fi").unwrap();
     writeln!(out).unwrap();
 
     writeln!(out, "echo \"\"").unwrap();
-    writeln!(out, "echo \"============================================================\"").unwrap();
+    writeln!(
+        out,
+        "echo \"============================================================\""
+    )
+    .unwrap();
     writeln!(out, "echo \"Benchmark complete.\"").unwrap();
-    writeln!(out, "echo \"For accurate Julia timings, run benchmark.jl directly\"").unwrap();
-    writeln!(out, "echo \"(the first run includes precompilation overhead).\"").unwrap();
-    writeln!(out, "echo \"============================================================\"").unwrap();
+    writeln!(
+        out,
+        "echo \"For accurate Julia timings, run benchmark.jl directly\""
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "echo \"(the first run includes precompilation overhead).\""
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "echo \"============================================================\""
+    )
+    .unwrap();
 
     out
 }
@@ -247,7 +334,11 @@ fn generate_results_template(units: &[TranslationUnit]) -> String {
 
     writeln!(out, "# SPDX-License-Identifier: PMPL-1.0-or-later").unwrap();
     writeln!(out, "# julianiser benchmark results").unwrap();
-    writeln!(out, "# Fill in timing data after running benchmark_runner.sh").unwrap();
+    writeln!(
+        out,
+        "# Fill in timing data after running benchmark_runner.sh"
+    )
+    .unwrap();
     writeln!(out).unwrap();
 
     for unit in units {
@@ -257,7 +348,11 @@ fn generate_results_template(units: &[TranslationUnit]) -> String {
         writeln!(out, "language = \"{}\"", unit.language).unwrap();
         writeln!(out, "original_time_seconds = 0.0  # TODO: fill in").unwrap();
         writeln!(out, "julia_time_seconds = 0.0     # TODO: fill in").unwrap();
-        writeln!(out, "speedup = 0.0                # TODO: compute original / julia").unwrap();
+        writeln!(
+            out,
+            "speedup = 0.0                # TODO: compute original / julia"
+        )
+        .unwrap();
         writeln!(out, "iterations = 1000").unwrap();
         writeln!(out, "notes = \"\"").unwrap();
         writeln!(out).unwrap();

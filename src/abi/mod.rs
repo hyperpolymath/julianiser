@@ -323,7 +323,7 @@ impl BenchmarkResult {
 /// Used to derive Julia module names from filenames.
 /// e.g. "data_pipeline" → "DataPipeline", "my-analysis" → "MyAnalysis"
 fn to_pascal_case(s: &str) -> String {
-    s.split(|c: char| c == '_' || c == '-' || c == '.')
+    s.split(['_', '-', '.'])
         .filter(|part| !part.is_empty())
         .map(|part| {
             let mut chars = part.chars();
@@ -350,7 +350,10 @@ mod tests {
 
     #[test]
     fn test_source_language_from_str() {
-        assert_eq!(SourceLanguage::from_str_loose("python"), Some(SourceLanguage::Python));
+        assert_eq!(
+            SourceLanguage::from_str_loose("python"),
+            Some(SourceLanguage::Python)
+        );
         assert_eq!(SourceLanguage::from_str_loose("R"), Some(SourceLanguage::R));
         assert_eq!(SourceLanguage::from_str_loose("go"), None);
     }
@@ -379,8 +382,13 @@ mod tests {
     #[test]
     fn test_library_mapping_translate() {
         let mut mapping = LibraryMapping::new("pandas", "DataFrames", SourceLanguage::Python);
-        mapping.function_map.insert("read_csv".to_string(), "CSV.read".to_string());
-        assert_eq!(mapping.translate_function("read_csv"), Some(&"CSV.read".to_string()));
+        mapping
+            .function_map
+            .insert("read_csv".to_string(), "CSV.read".to_string());
+        assert_eq!(
+            mapping.translate_function("read_csv"),
+            Some(&"CSV.read".to_string())
+        );
         assert_eq!(mapping.translate_function("unknown_fn"), None);
     }
 

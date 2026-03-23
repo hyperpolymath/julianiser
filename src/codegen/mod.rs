@@ -39,7 +39,10 @@ pub fn generate_all(manifest: &Manifest, output_dir: &str) -> Result<()> {
     fs::create_dir_all(out).context("Failed to create output directory")?;
 
     // Phase 1: Parse all source files.
-    println!("  [parse] Analysing {} source file(s)...", manifest.sources.len());
+    println!(
+        "  [parse] Analysing {} source file(s)...",
+        manifest.sources.len()
+    );
     let units = parse_all_sources(manifest)?;
 
     // Report detection results.
@@ -126,7 +129,9 @@ pub fn build(manifest: &Manifest, release: bool) -> Result<()> {
         "Building julianiser project '{}' in {} mode",
         manifest.project.name, mode
     );
-    println!("  To build manually: cd generated/julianiser && julia --project=. -e 'using Pkg; Pkg.instantiate()'");
+    println!(
+        "  To build manually: cd generated/julianiser && julia --project=. -e 'using Pkg; Pkg.instantiate()'"
+    );
     // Actual Julia invocation would go here, but we don't assume Julia is installed
     // during build-time. The generated scripts handle runtime execution.
     Ok(())
@@ -141,7 +146,9 @@ pub fn run(manifest: &Manifest, args: &[String]) -> Result<()> {
         manifest.project.name,
         args.len()
     );
-    println!("  To run manually: cd generated/julianiser && julia --project=. -e 'include(\"<module>.jl\"); <Module>.run_pipeline()'");
+    println!(
+        "  To run manually: cd generated/julianiser && julia --project=. -e 'include(\"<module>.jl\"); <Module>.run_pipeline()'"
+    );
     Ok(())
 }
 

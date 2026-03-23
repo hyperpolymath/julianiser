@@ -169,8 +169,7 @@ fn default_julia_version() -> String {
 pub fn load_manifest(path: &str) -> Result<Manifest> {
     let content = std::fs::read_to_string(path)
         .with_context(|| format!("Failed to read manifest: {}", path))?;
-    parse_manifest(&content)
-        .with_context(|| format!("Failed to parse manifest: {}", path))
+    parse_manifest(&content).with_context(|| format!("Failed to parse manifest: {}", path))
 }
 
 /// Parse a manifest from a TOML string.
@@ -231,7 +230,10 @@ pub fn validate(manifest: &Manifest) -> Result<()> {
 pub fn init_manifest(path: &str) -> Result<()> {
     let manifest_path = Path::new(path).join("julianiser.toml");
     if manifest_path.exists() {
-        anyhow::bail!("julianiser.toml already exists at {}", manifest_path.display());
+        anyhow::bail!(
+            "julianiser.toml already exists at {}",
+            manifest_path.display()
+        );
     }
     let template = r#"# julianiser manifest — Auto-wrap Python/R data pipelines into Julia
 # SPDX-License-Identifier: PMPL-1.0-or-later
@@ -267,7 +269,10 @@ packages = ["DataFrames", "CSV", "Statistics"]
 /// Displays project metadata, source count, mapping count, and Julia config
 /// in a human-readable format suitable for the `info` CLI subcommand.
 pub fn print_info(manifest: &Manifest) {
-    println!("=== {} v{} ===", manifest.project.name, manifest.project.version);
+    println!(
+        "=== {} v{} ===",
+        manifest.project.name, manifest.project.version
+    );
     if !manifest.project.description.is_empty() {
         println!("  {}", manifest.project.description);
     }

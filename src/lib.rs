@@ -1,3 +1,10 @@
+#![allow(
+    dead_code,
+    clippy::too_many_arguments,
+    clippy::manual_strip,
+    clippy::if_same_then_else,
+    clippy::vec_init_then_push
+)]
 #![forbid(unsafe_code)]
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
@@ -19,7 +26,7 @@ pub use abi::{
     BenchmarkResult, DetectedCall, JuliaType, LibraryMapping, SourceLanguage, TranslationUnit,
 };
 pub use codegen::parse_source_string;
-pub use manifest::{load_manifest, parse_manifest, validate, Manifest};
+pub use manifest::{Manifest, load_manifest, parse_manifest, validate};
 
 /// Convenience: load, validate, and generate all artifacts from a manifest file.
 ///

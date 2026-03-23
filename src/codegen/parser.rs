@@ -303,9 +303,10 @@ fn detect_python_bare_calls(
         let pattern = format!("{}(", func_name);
         if trimmed.contains(&pattern) {
             // Check it's not already detected as a qualified call.
-            let already_detected = unit.detected_calls.iter().any(|c| {
-                c.line_number == line_number && c.function == *func_name
-            });
+            let already_detected = unit
+                .detected_calls
+                .iter()
+                .any(|c| c.line_number == line_number && c.function == *func_name);
             if already_detected {
                 continue;
             }
@@ -360,12 +361,12 @@ pub fn parse_r_source(source_path: &str, content: &str) -> Result<TranslationUni
 
         // Detect `library(X)` or `require(X)`.
         for loader in &["library(", "require("] {
-            if let Some(rest) = trimmed.strip_prefix(loader) {
-                if let Some(end) = rest.find(')') {
-                    let lib_name = rest[..end].trim().trim_matches('"').trim_matches('\'');
-                    if !lib_name.is_empty() {
-                        loaded_libraries.push(lib_name.to_string());
-                    }
+            if let Some(rest) = trimmed.strip_prefix(loader)
+                && let Some(end) = rest.find(')')
+            {
+                let lib_name = rest[..end].trim().trim_matches('"').trim_matches('\'');
+                if !lib_name.is_empty() {
+                    loaded_libraries.push(lib_name.to_string());
                 }
             }
         }
@@ -458,9 +459,10 @@ fn detect_r_bare_calls(
     for (func_name, default_lib) in known_fns.iter() {
         let pattern = format!("{}(", func_name);
         if trimmed.contains(&pattern) {
-            let already_detected = unit.detected_calls.iter().any(|c| {
-                c.line_number == line_number && c.function == *func_name
-            });
+            let already_detected = unit
+                .detected_calls
+                .iter()
+                .any(|c| c.line_number == line_number && c.function == *func_name);
             if already_detected {
                 continue;
             }
@@ -550,7 +552,11 @@ fn extract_parenthesised_args(s: &str, open_paren_pos: usize) -> Vec<String> {
 ///
 /// Dispatches to the language-specific parser. This is the main entry
 /// point used by the codegen pipeline.
-pub fn parse_source(source_path: &str, content: &str, language: SourceLanguage) -> Result<TranslationUnit> {
+pub fn parse_source(
+    source_path: &str,
+    content: &str,
+    language: SourceLanguage,
+) -> Result<TranslationUnit> {
     match language {
         SourceLanguage::Python => parse_python_source(source_path, content),
         SourceLanguage::R => parse_r_source(source_path, content),
@@ -573,7 +579,10 @@ arr = np.array([1, 2, 3])
         let unit = parse_python_source("test.py", code).unwrap();
         assert!(unit.detected_calls.len() >= 2);
 
-        let csv_call = unit.detected_calls.iter().find(|c| c.function == "read_csv");
+        let csv_call = unit
+            .detected_calls
+            .iter()
+            .find(|c| c.function == "read_csv");
         assert!(csv_call.is_some());
         assert_eq!(csv_call.unwrap().library, "pandas");
 
@@ -589,7 +598,10 @@ from pandas import read_csv, DataFrame
 df = read_csv("data.csv")
 "#;
         let unit = parse_python_source("test.py", code).unwrap();
-        let csv_call = unit.detected_calls.iter().find(|c| c.function == "read_csv");
+        let csv_call = unit
+            .detected_calls
+            .iter()
+            .find(|c| c.function == "read_csv");
         assert!(csv_call.is_some());
         assert_eq!(csv_call.unwrap().library, "pandas");
     }

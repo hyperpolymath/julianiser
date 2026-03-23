@@ -115,8 +115,12 @@ fn test_manifest_round_trip() {
 
 #[test]
 fn test_python_source_parsing_detects_calls() {
-    let unit = julianiser::parse_source_string("pipeline.py", sample_python_code(), SourceLanguage::Python)
-        .expect("Python parsing should succeed");
+    let unit = julianiser::parse_source_string(
+        "pipeline.py",
+        sample_python_code(),
+        SourceLanguage::Python,
+    )
+    .expect("Python parsing should succeed");
 
     // Should detect multiple pandas and numpy calls.
     assert!(
@@ -126,12 +130,20 @@ fn test_python_source_parsing_detects_calls() {
     );
 
     // Verify specific calls are detected.
-    let libraries: Vec<&str> = unit.detected_calls.iter().map(|c| c.library.as_str()).collect();
+    let libraries: Vec<&str> = unit
+        .detected_calls
+        .iter()
+        .map(|c| c.library.as_str())
+        .collect();
     assert!(libraries.contains(&"pandas"), "Should detect pandas calls");
     assert!(libraries.contains(&"numpy"), "Should detect numpy calls");
 
     // Verify function names.
-    let functions: Vec<&str> = unit.detected_calls.iter().map(|c| c.function.as_str()).collect();
+    let functions: Vec<&str> = unit
+        .detected_calls
+        .iter()
+        .map(|c| c.function.as_str())
+        .collect();
     assert!(functions.contains(&"read_csv"), "Should detect read_csv");
     assert!(functions.contains(&"array"), "Should detect array");
     assert!(functions.contains(&"mean"), "Should detect mean");
@@ -157,11 +169,22 @@ fn test_r_source_parsing_detects_calls() {
         unit.detected_calls.len()
     );
 
-    let libraries: Vec<&str> = unit.detected_calls.iter().map(|c| c.library.as_str()).collect();
+    let libraries: Vec<&str> = unit
+        .detected_calls
+        .iter()
+        .map(|c| c.library.as_str())
+        .collect();
     assert!(libraries.contains(&"dplyr"), "Should detect dplyr calls");
-    assert!(libraries.contains(&"ggplot2"), "Should detect ggplot2 calls");
+    assert!(
+        libraries.contains(&"ggplot2"),
+        "Should detect ggplot2 calls"
+    );
 
-    let functions: Vec<&str> = unit.detected_calls.iter().map(|c| c.function.as_str()).collect();
+    let functions: Vec<&str> = unit
+        .detected_calls
+        .iter()
+        .map(|c| c.function.as_str())
+        .collect();
     assert!(functions.contains(&"filter"), "Should detect filter");
     assert!(functions.contains(&"group_by"), "Should detect group_by");
     assert!(functions.contains(&"ggplot"), "Should detect ggplot");
@@ -175,8 +198,12 @@ fn test_r_source_parsing_detects_calls() {
 
 #[test]
 fn test_julia_codegen_produces_valid_module() {
-    let unit = julianiser::parse_source_string("pipeline.py", sample_python_code(), SourceLanguage::Python)
-        .expect("Parsing should succeed");
+    let unit = julianiser::parse_source_string(
+        "pipeline.py",
+        sample_python_code(),
+        SourceLanguage::Python,
+    )
+    .expect("Parsing should succeed");
 
     let manifest = manifest::parse_manifest(sample_manifest_toml()).unwrap();
     let julia_code = julia_gen::generate_julia_module(&unit, &manifest.mappings);
@@ -192,10 +219,7 @@ fn test_julia_codegen_produces_valid_module() {
         julia_code.contains("using DataFrames"),
         "Must import DataFrames"
     );
-    assert!(
-        julia_code.contains("using CSV"),
-        "Must import CSV"
-    );
+    assert!(julia_code.contains("using CSV"), "Must import CSV");
 
     // Must contain run_pipeline function.
     assert!(
@@ -247,16 +271,19 @@ fn test_full_generation_writes_files() {
     let output_dir = manifest_dir.join("output");
 
     // Load and parse manifest.
-    let manifest = manifest::load_manifest(manifest_path.to_str().unwrap())
-        .expect("Should load manifest");
+    let manifest =
+        manifest::load_manifest(manifest_path.to_str().unwrap()).expect("Should load manifest");
     manifest::validate(&manifest).expect("Should validate");
 
     // Parse sources (reading from the temp directory).
     let py_content = std::fs::read_to_string(&py_path).unwrap();
     let r_content = std::fs::read_to_string(&r_path).unwrap();
 
-    let py_unit = julianiser::parse_source_string("pipeline.py", &py_content, SourceLanguage::Python).unwrap();
-    let r_unit = julianiser::parse_source_string("analysis.R", &r_content, SourceLanguage::R).unwrap();
+    let py_unit =
+        julianiser::parse_source_string("pipeline.py", &py_content, SourceLanguage::Python)
+            .unwrap();
+    let r_unit =
+        julianiser::parse_source_string("analysis.R", &r_content, SourceLanguage::R).unwrap();
 
     let units = vec![py_unit, r_unit];
 
@@ -265,9 +292,18 @@ fn test_full_generation_writes_files() {
         .expect("Should generate Julia files");
 
     // Verify files were created.
-    assert!(output_dir.join("pipeline.jl").exists(), "pipeline.jl must exist");
-    assert!(output_dir.join("analysis.jl").exists(), "analysis.jl must exist");
-    assert!(output_dir.join("Project.toml").exists(), "Project.toml must exist");
+    assert!(
+        output_dir.join("pipeline.jl").exists(),
+        "pipeline.jl must exist"
+    );
+    assert!(
+        output_dir.join("analysis.jl").exists(),
+        "analysis.jl must exist"
+    );
+    assert!(
+        output_dir.join("Project.toml").exists(),
+        "Project.toml must exist"
+    );
     assert!(generated.len() >= 3, "At least 3 files generated");
 
     // Verify Project.toml content.
@@ -288,39 +324,76 @@ fn test_benchmark_generation() {
 
     let manifest = manifest::parse_manifest(sample_manifest_toml()).unwrap();
 
-    let py_unit = julianiser::parse_source_string("pipeline.py", sample_python_code(), SourceLanguage::Python).unwrap();
-    let r_unit = julianiser::parse_source_string("analysis.R", sample_r_code(), SourceLanguage::R).unwrap();
+    let py_unit = julianiser::parse_source_string(
+        "pipeline.py",
+        sample_python_code(),
+        SourceLanguage::Python,
+    )
+    .unwrap();
+    let r_unit =
+        julianiser::parse_source_string("analysis.R", sample_r_code(), SourceLanguage::R).unwrap();
     let units = vec![py_unit, r_unit];
 
-    let bench_files = julianiser::codegen::benchmark::generate_benchmarks(&manifest, &units, &output_dir)
-        .expect("Benchmark generation should succeed");
+    let bench_files =
+        julianiser::codegen::benchmark::generate_benchmarks(&manifest, &units, &output_dir)
+            .expect("Benchmark generation should succeed");
 
     // Should produce 3 files: benchmark.jl, benchmark_runner.sh, results.toml.
     assert_eq!(bench_files.len(), 3, "Should generate 3 benchmark files");
 
     let bench_dir = output_dir.join("benchmarks");
-    assert!(bench_dir.join("benchmark.jl").exists(), "benchmark.jl must exist");
-    assert!(bench_dir.join("benchmark_runner.sh").exists(), "benchmark_runner.sh must exist");
-    assert!(bench_dir.join("results.toml").exists(), "results.toml must exist");
+    assert!(
+        bench_dir.join("benchmark.jl").exists(),
+        "benchmark.jl must exist"
+    );
+    assert!(
+        bench_dir.join("benchmark_runner.sh").exists(),
+        "benchmark_runner.sh must exist"
+    );
+    assert!(
+        bench_dir.join("results.toml").exists(),
+        "results.toml must exist"
+    );
 
     // Verify benchmark.jl content.
     let bench_jl = std::fs::read_to_string(bench_dir.join("benchmark.jl")).unwrap();
-    assert!(bench_jl.contains("using BenchmarkTools"), "Must use BenchmarkTools");
-    assert!(bench_jl.contains("@benchmark"), "Must contain @benchmark macro");
-    assert!(bench_jl.contains("Pipeline"), "Must reference Pipeline module");
-    assert!(bench_jl.contains("Analysis"), "Must reference Analysis module");
+    assert!(
+        bench_jl.contains("using BenchmarkTools"),
+        "Must use BenchmarkTools"
+    );
+    assert!(
+        bench_jl.contains("@benchmark"),
+        "Must contain @benchmark macro"
+    );
+    assert!(
+        bench_jl.contains("Pipeline"),
+        "Must reference Pipeline module"
+    );
+    assert!(
+        bench_jl.contains("Analysis"),
+        "Must reference Analysis module"
+    );
 
     // Verify runner script has correct shebang and references both languages.
     let runner = std::fs::read_to_string(bench_dir.join("benchmark_runner.sh")).unwrap();
-    assert!(runner.starts_with("#!/usr/bin/env bash"), "Must have bash shebang");
+    assert!(
+        runner.starts_with("#!/usr/bin/env bash"),
+        "Must have bash shebang"
+    );
     assert!(runner.contains("python3"), "Must reference Python runner");
     assert!(runner.contains("Rscript"), "Must reference R runner");
     assert!(runner.contains("julia"), "Must reference Julia runner");
 
     // Verify results template.
     let results = std::fs::read_to_string(bench_dir.join("results.toml")).unwrap();
-    assert!(results.contains("[[benchmarks]]"), "Must have benchmark entries");
-    assert!(results.contains("original_time_seconds"), "Must have timing fields");
+    assert!(
+        results.contains("[[benchmarks]]"),
+        "Must have benchmark entries"
+    );
+    assert!(
+        results.contains("original_time_seconds"),
+        "Must have timing fields"
+    );
 }
 
 // =========================================================================
@@ -351,7 +424,11 @@ fn test_abi_types_serde_round_trip() {
     bench.original_time_seconds = Some(5.0);
     bench.julia_time_seconds = Some(0.05);
     let speedup = bench.compute_speedup().unwrap();
-    assert!((speedup - 100.0).abs() < 0.01, "Expected 100x speedup, got {}", speedup);
+    assert!(
+        (speedup - 100.0).abs() < 0.01,
+        "Expected 100x speedup, got {}",
+        speedup
+    );
 
     // TranslationUnit derives module name correctly.
     let unit = TranslationUnit::new("my_data_pipeline.py", SourceLanguage::Python);
