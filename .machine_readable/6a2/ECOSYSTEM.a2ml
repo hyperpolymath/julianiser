@@ -1,64 +1,20 @@
-;; SPDX-License-Identifier: PMPL-1.0-or-later
-;; Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
-;; ECOSYSTEM.a2ml — Ecosystem position for julianiser
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# ECOSYSTEM.a2ml — Julianiser ecosystem position
+[metadata]
+version = "0.1.0"
+last-updated = "2026-04-11"
 
-(ecosystem
-  (version "0.1.0")
-  (name "julianiser")
-  (type "tool")
-  (purpose "Analyse Python/R data pipelines and generate drop-in Julia replacements for 10-100x speedups via LLVM JIT")
+[project]
+name = "Julianiser"
+purpose = "Analyse Python/R data pipelines and generate drop-in Julia replacements for 10-100x speedups via LLVM JIT"
+role = "tool"
 
-  (position-in-ecosystem
-    (family "-iser acceleration frameworks")
-    (meta-framework "iseriser")
-    (relationship "sibling")
-    (top-3 ("typedqliser" "chapeliser" "verisimiser"))
-    (unique-value "Julia's multiple dispatch and LLVM JIT give 10-100x speedups on numeric/array code without the two-language problem"))
+[position-in-ecosystem]
+category = ""
 
-  (related-projects
-    (project "iseriser"
-      (relationship "meta-framework")
-      (description "Generates new -iser project scaffolding"))
-    (project "typedqliser"
-      (relationship "sibling-priority-1")
-      (description "Formal type safety for any query language"))
-    (project "chapeliser"
-      (relationship "sibling-priority-2")
-      (description "Chapel distributed computing acceleration"))
-    (project "verisimiser"
-      (relationship "sibling-priority-3")
-      (description "VeriSimDB octad database augmentation"))
-    (project "halideiser"
-      (relationship "sibling")
-      (description "Halide image processing acceleration"))
-    (project "futharkiser"
-      (relationship "sibling")
-      (description "Futhark GPU array programming acceleration"))
-    (project "squeakwell"
-      (relationship "sibling")
-      (description "Database recovery via constraint propagation"))
-    (project "proven"
-      (relationship "dependency")
-      (description "Shared Idris2 verified library for formal proofs"))
-    (project "typell"
-      (relationship "dependency")
-      (description "Type theory engine used by ABI layer"))
-    (project "panll"
-      (relationship "integration")
-      (description "Panel framework for interactive julianiser workflows"))
-    (project "boj-server"
-      (relationship "integration")
-      (description "Cartridge host for remote julianiser execution"))
-    (project "verisimdb"
-      (relationship "integration")
-      (description "Storage backend for benchmark results and regression tracking")))
-
-  (target-ecosystem
-    (description "Data scientists using Python (pandas, numpy, scipy) and R (dplyr, tidyr, ggplot2)")
-    (julia-packages
-      (package "DataFrames.jl" (maps-from "pandas DataFrame, R data.frame"))
-      (package "Plots.jl" (maps-from "matplotlib, ggplot2"))
-      (package "Optim.jl" (maps-from "scipy.optimize"))
-      (package "MLJ.jl" (maps-from "scikit-learn"))
-      (package "CUDA.jl" (maps-from "GPU acceleration target"))
-      (package "Distributed.jl" (maps-from "HPC/cluster target")))))
+[related-projects]
+projects = [
+  # No related projects recorded
+]
