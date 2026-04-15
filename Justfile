@@ -2,6 +2,8 @@
 # julianiser — Python/R to Julia data pipeline conversion
 
 # Default: build and test
+import? "contractile.just"
+
 default: build test
 
 # Build release binary
