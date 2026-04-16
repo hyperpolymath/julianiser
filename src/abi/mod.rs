@@ -397,7 +397,7 @@ mod tests {
         let mut result = BenchmarkResult::new("test", SourceLanguage::Python);
         result.original_time_seconds = Some(10.0);
         result.julia_time_seconds = Some(0.1);
-        let speedup = result.compute_speedup().unwrap();
+        let speedup = result.compute_speedup().expect("TODO: handle error");
         assert!((speedup - 100.0).abs() < 0.001);
     }
 

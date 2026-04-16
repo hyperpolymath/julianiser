@@ -148,7 +148,7 @@ pub fn parse_python_source(source_path: &str, content: &str) -> Result<Translati
 
         // Detect `import X as Y` or `import X`
         if trimmed.starts_with("import ") && !trimmed.starts_with("import(") {
-            let rest = trimmed.strip_prefix("import ").unwrap().trim();
+            let rest = trimmed.strip_prefix("import ").expect("TODO: handle error").trim();
             if let Some((module, alias)) = rest.split_once(" as ") {
                 let module = module.trim();
                 let alias = alias.trim();
@@ -576,7 +576,7 @@ import numpy as np
 df = pd.read_csv("data.csv")
 arr = np.array([1, 2, 3])
 "#;
-        let unit = parse_python_source("test.py", code).unwrap();
+        let unit = parse_python_source("test.py", code).expect("TODO: handle error");
         assert!(unit.detected_calls.len() >= 2);
 
         let csv_call = unit
@@ -584,11 +584,11 @@ arr = np.array([1, 2, 3])
             .iter()
             .find(|c| c.function == "read_csv");
         assert!(csv_call.is_some());
-        assert_eq!(csv_call.unwrap().library, "pandas");
+        assert_eq!(csv_call.expect("TODO: handle error").library, "pandas");
 
         let array_call = unit.detected_calls.iter().find(|c| c.function == "array");
         assert!(array_call.is_some());
-        assert_eq!(array_call.unwrap().library, "numpy");
+        assert_eq!(array_call.expect("TODO: handle error").library, "numpy");
     }
 
     #[test]
@@ -597,13 +597,13 @@ arr = np.array([1, 2, 3])
 from pandas import read_csv, DataFrame
 df = read_csv("data.csv")
 "#;
-        let unit = parse_python_source("test.py", code).unwrap();
+        let unit = parse_python_source("test.py", code).expect("TODO: handle error");
         let csv_call = unit
             .detected_calls
             .iter()
             .find(|c| c.function == "read_csv");
         assert!(csv_call.is_some());
-        assert_eq!(csv_call.unwrap().library, "pandas");
+        assert_eq!(csv_call.expect("TODO: handle error").library, "pandas");
     }
 
     #[test]
@@ -615,14 +615,14 @@ library(ggplot2)
 df <- filter(data, x > 0)
 p <- ggplot(df, aes(x, y))
 "#;
-        let unit = parse_r_source("test.R", code).unwrap();
+        let unit = parse_r_source("test.R", code).expect("TODO: handle error");
         let filter_call = unit.detected_calls.iter().find(|c| c.function == "filter");
         assert!(filter_call.is_some());
-        assert_eq!(filter_call.unwrap().library, "dplyr");
+        assert_eq!(filter_call.expect("TODO: handle error").library, "dplyr");
 
         let ggplot_call = unit.detected_calls.iter().find(|c| c.function == "ggplot");
         assert!(ggplot_call.is_some());
-        assert_eq!(ggplot_call.unwrap().library, "ggplot2");
+        assert_eq!(ggplot_call.expect("TODO: handle error").library, "ggplot2");
     }
 
     #[test]
@@ -630,10 +630,10 @@ p <- ggplot(df, aes(x, y))
         let code = r#"
 result <- dplyr::filter(df, x > 0)
 "#;
-        let unit = parse_r_source("test.R", code).unwrap();
+        let unit = parse_r_source("test.R", code).expect("TODO: handle error");
         let call = unit.detected_calls.iter().find(|c| c.function == "filter");
         assert!(call.is_some());
-        assert_eq!(call.unwrap().library, "dplyr");
+        assert_eq!(call.expect("TODO: handle error").library, "dplyr");
     }
 
     #[test]

@@ -336,7 +336,7 @@ name = ""
 path = "x.py"
 language = "python"
 "#;
-        let m = parse_manifest(toml).unwrap();
+        let m = parse_manifest(toml).expect("TODO: handle error");
         assert!(validate(&m).is_err());
     }
 
@@ -351,7 +351,7 @@ name = "test"
 path = "x.go"
 language = "go"
 "#;
-        let m = parse_manifest(toml).unwrap();
+        let m = parse_manifest(toml).expect("TODO: handle error");
         let err = validate(&m).unwrap_err();
         assert!(err.to_string().contains("'python' or 'r'"));
     }
