@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # julianiser manifest — Example data pipeline translation
 #
 # This example demonstrates translating a Python pandas/numpy pipeline

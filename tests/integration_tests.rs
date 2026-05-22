@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 //
 // Integration tests for julianiser.
@@ -241,7 +241,7 @@ fn test_julia_codegen_produces_valid_module() {
 
     // Must have SPDX header.
     assert!(
-        julia_code.contains("SPDX-License-Identifier: PMPL-1.0-or-later"),
+        julia_code.contains("SPDX-License-Identifier: MPL-2.0"),
         "Must have SPDX header"
     );
 }

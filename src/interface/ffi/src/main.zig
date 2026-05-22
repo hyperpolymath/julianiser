@@ -4,7 +4,7 @@
 // Handles Python/R source parsing dispatch and Julia code generation across
 // the ABI boundary. All types and layouts must match the Idris2 ABI definitions.
 //
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
 const std = @import("std");
