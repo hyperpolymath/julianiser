@@ -47,7 +47,7 @@ julianiser/
     ├── 6a2/                        # STATE, META, ECOSYSTEM, AGENTIC, NEUROSYM, PLAYBOOK
     ├── anchors/                    # Semantic authority anchor
     ├── policies/                   # Maintenance axes and checklists
-    ├── contractiles/               # k9, must, trust, dust, lust
+    ├── contractiles/               # k9, must, trust, dust, intend
     └── integrations/               # proven, verisimdb, vexometer, feedback-o-tron
 ```
 
