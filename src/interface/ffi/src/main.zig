@@ -1,11 +1,11 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 // Julianiser FFI Implementation
 //
 // Implements the C-compatible FFI declared in src/interface/abi/Foreign.idr.
 // Handles Python/R source parsing dispatch and Julia code generation across
 // the ABI boundary. All types and layouts must match the Idris2 ABI definitions.
 //
-// SPDX-License-Identifier: MPL-2.0
-// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
 const std = @import("std");
 
