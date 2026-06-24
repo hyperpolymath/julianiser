@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: CC-BY-SA-4.0
 // Template: QUICKSTART-USER.adoc — 5-minute path to working software
 // Replace julianiser, Julianiser — See README.adoc for details., just run, Julianiser started successfully. with actuals
 = julianiser — Quick Start for Users
