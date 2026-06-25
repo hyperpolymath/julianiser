@@ -1,0 +1,159 @@
+<!--
+SPDX-License-Identifier: CC-BY-SA-4.0
+SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+-->
+
+# What Is This?
+
+Julianiser analyses existing Python and R data science code, identifies
+performance-critical array and dataframe operations, and generates
+equivalent Julia code with full type annotations — producing **drop-in
+replacement modules** that deliver **10-100x speedups** through Julia’s
+LLVM JIT compilation.
+
+Scientists keep their Python notebooks. Julia runs underneath.
+
+# How It Works
+
+Describe your data pipeline in a `julianiser.toml` manifest. Julianiser:
+
+1.  **Parses** your Python functions (via AST) or R scripts (via R
+    parser)
+
+2.  **Identifies** array operations, dataframe transformations, and
+    numeric hot paths
+
+3.  **Generates** Julia equivalents with proper type annotations and
+    broadcasting
+
+4.  **Creates** a Zig FFI bridge for calling Julia from your existing
+    code (zero-copy where possible)
+
+5.  **Benchmarks** the original vs. generated code to verify speedup
+
+6.  **Falls back** gracefully — if Julia is not installed, your Python/R
+    code still runs
+
+# Key Value
+
+- **No Julia knowledge required** — Julianiser handles the translation
+
+- **10-100x speedups** on numeric, array, and dataframe code without
+  manual rewrites
+
+- **Gradual adoption** — julianise one function at a time, benchmark
+  each
+
+- **Drop-in modules** — generated Julia code exposes the same API as
+  your Python/R functions
+
+- **Formally verified bridges** — Idris2 ABI proofs guarantee interface
+  correctness
+
+# Supported Patterns
+
+Julianiser recognises and translates these common data science patterns:
+
+| Python | Julia Equivalent | Notes |
+|----|----|----|
+| `pandas.DataFrame` | `DataFrames.jl` | Column operations, groupby, joins |
+| `numpy` arrays | Native Julia arrays | Broadcasting, slicing, linear algebra |
+| `scipy.optimize` | `Optim.jl` / Julia stdlib | Minimisation, root-finding, curve fitting |
+| `matplotlib` / `seaborn` | `Plots.jl` / `Makie.jl` | Static and interactive plotting |
+| `scikit-learn` pipelines | `MLJ.jl` | Train/predict/evaluate pattern |
+| R `data.frame` / `tibble` | `DataFrames.jl` | dplyr-style verbs mapped to Julia |
+| R `apply` / `sapply` / `lapply` | Julia broadcasting / `map` | Vectorised equivalents |
+
+# Why Julia?
+
+Julia achieves C-like performance through:
+
+- **LLVM JIT compilation** — code is compiled to native machine code on
+  first call
+
+- **Multiple dispatch** — the type system enables aggressive
+  specialisation
+
+- **Type inference** — the compiler infers concrete types for fast code
+  paths
+
+- **Broadcasting** — element-wise operations fuse into single loops (no
+  temporary arrays)
+
+- **In-place operations** — `mul!`, `ldiv!`, and friends avoid
+  allocation
+
+The "two-language problem" (prototype in Python, rewrite in C)
+disappears. Julia is both the prototyping language and the production
+language.
+
+# Architecture
+
+Follows the hyperpolymath -iser pattern (same as
+[Chapeliser](https://github.com/hyperpolymath/chapeliser)):
+
+- **Manifest** (`julianiser.toml`) — describe WHAT you want julianised
+
+- **Source Parser** — Python AST analysis / R parser for identifying
+  translatable patterns
+
+- **Idris2 ABI** (`src/interface/abi/`) — formal proofs of equivalence
+  between source and generated code
+
+- **Julia Codegen** (`src/codegen/`) — generates type-annotated Julia
+  with proper broadcasting
+
+- **Zig FFI** (`src/interface/ffi/`) — C-ABI bridge between Julia
+  runtime and calling code
+
+- **Benchmark Harness** — compares original Python/R vs. generated Julia
+  performance
+
+- **Rust CLI** (`src/main.rs`) — orchestrates parsing, validation,
+  generation, building, and benchmarking
+
+User writes zero Julia code. Julianiser generates everything.
+
+Part of the [-iser family](https://github.com/hyperpolymath/iseriser) of
+acceleration frameworks.
+
+# Use Cases
+
+- **Data science acceleration** — speed up pandas/numpy pipelines
+  without rewriting
+
+- **Batch processing** — convert overnight Python ETL jobs to minutes
+  with Julia
+
+- **Scientific computing migration** — gradually move research code from
+  Python/R to Julia
+
+- **HPC preparation** — Julia code can target GPU (CUDA.jl) and
+  distributed (Distributed.jl) backends
+
+# Quick Start
+
+```bash
+# Install julianiser
+cargo install julianiser
+
+# Initialise a manifest in your project
+julianiser init
+
+# Edit julianiser.toml to point at your Python/R code
+# Then generate Julia replacements
+julianiser generate
+
+# Benchmark original vs. generated
+julianiser run --benchmark
+```
+
+# Status
+
+**Codebase in progress.** Architecture defined, CLI scaffolded, codegen
+pending. Phase 0 (scaffold) complete. Phase 1 (Python AST parser + Julia
+codegen) underway.
+
+# License
+
+SPDX-License-Identifier: CC-BY-SA-4.0
