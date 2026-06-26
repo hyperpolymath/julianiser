@@ -45,6 +45,11 @@ export
 free : Handle -> IO ()
 free h = primIO (prim__free (handlePtr h))
 
+||| Free a C string allocated by julianiser (shared infrastructure).
+export
+%foreign "C:julianiser_free_string, libjulianiser"
+prim__freeString : Bits64 -> PrimIO ()
+
 --------------------------------------------------------------------------------
 -- Source Parsing
 --------------------------------------------------------------------------------
@@ -154,6 +159,9 @@ getJuliaCode h = do
       let str = prim__getString ptr
       primIO (prim__freeString ptr)
       pure (Just str)
+  where
+    %foreign "support:idris2_getString, libidris2_support"
+    prim__getString : Bits64 -> String
 
 --------------------------------------------------------------------------------
 -- Benchmark Operations
@@ -187,20 +195,6 @@ getSpeedup : Handle -> IO Double
 getSpeedup h = primIO (prim__getSpeedup (handlePtr h))
 
 --------------------------------------------------------------------------------
--- String Operations (shared infrastructure)
---------------------------------------------------------------------------------
-
-||| Convert C string to Idris String
-export
-%foreign "support:idris2_getString, libidris2_support"
-prim__getString : Bits64 -> String
-
-||| Free C string allocated by julianiser
-export
-%foreign "C:julianiser_free_string, libjulianiser"
-prim__freeString : Bits64 -> PrimIO ()
-
---------------------------------------------------------------------------------
 -- Error Handling
 --------------------------------------------------------------------------------
 
@@ -217,6 +211,9 @@ lastError = do
   if ptr == 0
     then pure Nothing
     else pure (Just (prim__getString ptr))
+  where
+    %foreign "support:idris2_getString, libidris2_support"
+    prim__getString : Bits64 -> String
 
 ||| Get error description for result code
 export
@@ -244,6 +241,9 @@ version : IO String
 version = do
   ptr <- primIO prim__version
   pure (prim__getString ptr)
+  where
+    %foreign "support:idris2_getString, libidris2_support"
+    prim__getString : Bits64 -> String
 
 --------------------------------------------------------------------------------
 -- Utility Functions

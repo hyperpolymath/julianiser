@@ -1,0 +1,11 @@
+-- SPDX-License-Identifier: MPL-2.0
+-- Idris2 package for the julianiser ABI formal proofs.
+-- Build/check with:  idris2 --build julianiser-abi.ipkg   (from src/interface/abi/)
+package julianiser-abi
+
+sourcedir = "."
+
+modules = Julianiser.ABI.Types
+        , Julianiser.ABI.Layout
+        , Julianiser.ABI.Foreign
+        , Julianiser.ABI.Proofs
