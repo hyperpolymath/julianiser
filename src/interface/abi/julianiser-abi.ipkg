@@ -9,3 +9,4 @@ modules = Julianiser.ABI.Types
         , Julianiser.ABI.Layout
         , Julianiser.ABI.Foreign
         , Julianiser.ABI.Proofs
+        , Julianiser.ABI.Semantics
