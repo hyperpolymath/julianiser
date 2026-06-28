@@ -148,7 +148,10 @@ pub fn parse_python_source(source_path: &str, content: &str) -> Result<Translati
 
         // Detect `import X as Y` or `import X`
         if trimmed.starts_with("import ") && !trimmed.starts_with("import(") {
-            let rest = trimmed.strip_prefix("import ").expect("TODO: handle error").trim();
+            let rest = trimmed
+                .strip_prefix("import ")
+                .expect("TODO: handle error")
+                .trim();
             if let Some((module, alias)) = rest.split_once(" as ") {
                 let module = module.trim();
                 let alias = alias.trim();

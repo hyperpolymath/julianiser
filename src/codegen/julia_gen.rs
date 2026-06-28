@@ -227,7 +227,8 @@ pub fn generate_julia_module(unit: &TranslationUnit, manifest_mappings: &[Mappin
     writeln!(output, "function run_pipeline()").expect("TODO: handle error");
 
     if unit.detected_calls.is_empty() {
-        writeln!(output, "    # No translatable library calls detected.").expect("TODO: handle error");
+        writeln!(output, "    # No translatable library calls detected.")
+            .expect("TODO: handle error");
         writeln!(output, "    @info \"No operations to run.\"").expect("TODO: handle error");
     } else {
         for call in &unit.detected_calls {
@@ -364,7 +365,8 @@ pub fn generate_project_toml(manifest: &Manifest, units: &[TranslationUnit]) -> 
         if let Some(uuid) = uuids.get(pkg.as_str()) {
             writeln!(output, "{} = \"{}\"", pkg, uuid).expect("TODO: handle error");
         } else {
-            writeln!(output, "# {} = \"<uuid>\"  # TODO: look up UUID", pkg).expect("TODO: handle error");
+            writeln!(output, "# {} = \"<uuid>\"  # TODO: look up UUID", pkg)
+                .expect("TODO: handle error");
         }
     }
 

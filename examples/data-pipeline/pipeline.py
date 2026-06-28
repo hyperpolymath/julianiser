@@ -1,3 +1,4 @@
+# hypatia:ignore cicd_rules/banned_language_file -- demo INPUT: the Python pipeline julianiser wraps into Julia (fixture, not estate code)
 # SPDX-License-Identifier: MPL-2.0
 # Example Python data pipeline for julianiser translation demo.
 #
