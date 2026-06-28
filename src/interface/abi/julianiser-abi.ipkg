@@ -12,3 +12,4 @@ modules = Julianiser.ABI.Types
         , Julianiser.ABI.Semantics
         , Julianiser.ABI.Invariants
         , Julianiser.ABI.FfiSeam
+        , Julianiser.ABI.Capstone
