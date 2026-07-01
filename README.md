@@ -91,7 +91,7 @@ Julianiser recognises and translates these common data science patterns:
 | `numpy` arrays | Native Julia arrays | Broadcasting, slicing, linear algebra |
 | `scipy.optimize` | `Optim.jl` / Julia stdlib | Minimisation, root-finding, curve fitting |
 | `matplotlib` / `seaborn` | `Plots.jl` / `Makie.jl` | Static and interactive plotting |
-| `scikit-learn` pipelines | `MLJ.jl` | Train/predict/evaluate pattern |
+| `scikit-learn` pipelines | `MLJ.jl` | ⚠ **Planned** — sklearn imports are *detected* (the `sk` alias is recognised in the parser), but no sklearn→MLJ function conversions are mapped yet in the codegen |
 | R `data.frame` / `tibble` | `DataFrames.jl` | dplyr-style verbs mapped to Julia |
 | R `apply` / `sapply` / `lapply` | Julia broadcasting / `map` | Vectorised equivalents |
 
