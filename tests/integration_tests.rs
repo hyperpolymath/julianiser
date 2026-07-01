@@ -437,6 +437,72 @@ fn test_abi_types_serde_round_trip() {
 }
 
 // =========================================================================
+// Test 9 (G31): Local-variable method calls must not become hard errors
+// =========================================================================
+
+/// G31 (critical): the shipped `examples/data-pipeline/pipeline.py` calls
+/// several methods on local variables that are NOT import aliases —
+/// `df.dropna()`, `filtered.groupby(...)`, `summary.sort_values(...)`,
+/// `result.to_csv(...)`. Before the fix, the parser treated ANY
+/// `qualifier.function(` as a library-qualified call, so these local
+/// method chains were misdetected as calls to a (nonexistent) library
+/// named e.g. "df" or "result", which codegen then turned into a hard
+/// `error("Unmapped call: df.dropna")` INSIDE the generated
+/// `run_pipeline()` — meaning the "drop-in replacement" would throw on
+/// its first DataFrame method call. This test asserts the generated
+/// module contains no such hard error for the example pipeline.
+#[test]
+fn test_local_method_calls_do_not_produce_unmapped_call_errors() {
+    let pipeline_source = std::fs::read_to_string(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/examples/data-pipeline/pipeline.py"
+    ))
+    .expect("examples/data-pipeline/pipeline.py should exist and be readable");
+
+    let unit = julianiser::parse_source_string(
+        "pipeline.py",
+        &pipeline_source,
+        SourceLanguage::Python,
+    )
+    .expect("Parsing the example pipeline should succeed");
+
+    // Sanity: local-variable qualifiers must not leak in as fabricated
+    // "libraries" (df, filtered, summary, result are never imported).
+    let libraries: Vec<&str> = unit
+        .detected_calls
+        .iter()
+        .map(|c| c.library.as_str())
+        .collect();
+    for local_var in ["df", "filtered", "summary", "result"] {
+        assert!(
+            !libraries.contains(&local_var),
+            "Local variable '{}' must not be detected as a library",
+            local_var
+        );
+    }
+
+    let julia_code = julia_gen::generate_julia_module(&unit, &[]);
+
+    assert!(
+        !julia_code.contains("error(\"Unmapped call"),
+        "Generated module must never hard-error on local method calls; got:\n{}",
+        julia_code
+    );
+
+    // Real library calls (pd.read_csv, np.array, np.mean, np.std, np.dot)
+    // must still be detected and translated normally — the fix must not
+    // over-correct and drop legitimate library calls too.
+    assert!(
+        libraries.contains(&"pandas"),
+        "Should still detect pandas calls (pd.read_csv)"
+    );
+    assert!(
+        libraries.contains(&"numpy"),
+        "Should still detect numpy calls (np.array, np.mean, ...)"
+    );
+}
+
+// =========================================================================
 // Test 8: Manifest validation catches invalid inputs
 // =========================================================================
 

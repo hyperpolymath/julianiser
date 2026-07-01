@@ -32,7 +32,10 @@ test "create and destroy session" {
     const handle = julianiser_init() orelse return error.InitFailed;
     defer julianiser_free(handle);
 
-    try testing.expect(handle != null);
+    // `orelse` above already unwrapped the optional, so `handle` is a
+    // non-optional `*anyopaque` here — reaching this line at all proves
+    // julianiser_init() did not return null.
+    try testing.expect(@intFromPtr(handle) != 0);
 }
 
 test "session is initialized after creation" {
