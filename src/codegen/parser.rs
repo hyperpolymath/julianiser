@@ -217,6 +217,19 @@ pub fn parse_python_source(source_path: &str, content: &str) -> Result<Translati
 ///
 /// Checks the line for `qualifier.function(` patterns and resolves the
 /// qualifier through the alias tables.
+///
+/// G31 scope model: a `qualifier.function(` call is only ever a *library*
+/// call if `qualifier` is a name introduced by an `import` statement
+/// (tracked in `local_aliases`) or one of the well-known builtin aliases
+/// (`pd`, `np`, etc. in `builtin_aliases`). Any other qualifier is treated
+/// as a local variable — e.g. a DataFrame produced earlier in the script
+/// (`df.dropna()`, `result.to_csv(...)`) — and is intentionally left
+/// undetected here. Recording it as a library call would previously cause
+/// codegen to emit a hard `error("Unmapped call ...")` inside the
+/// generated `run_pipeline`, breaking pipelines on their very first local
+/// method call. Skipping keeps the generated module free of import-alias
+/// false positives; codegen may still choose to emit a passthrough
+/// comment for lines that had no detected calls at all.
 fn detect_python_qualified_calls(
     trimmed: &str,
     line_number: usize,
@@ -265,13 +278,24 @@ fn detect_python_qualified_calls(
             continue;
         }
 
-        // Resolve the qualifier to a library name.
+        // Resolve the qualifier to a library name — ONLY through the known
+        // import-alias tables. A qualifier that isn't a known import alias
+        // is a local variable (e.g. a DataFrame), not a library, so we must
+        // not fabricate a library name for it (see doc comment above).
         let library = if let Some(lib) = local_aliases.get(qualifier) {
-            lib.clone()
-        } else if let Some(lib) = builtin_aliases.get(qualifier) {
-            lib.to_string()
+            Some(lib.clone())
         } else {
-            qualifier.to_string()
+            builtin_aliases.get(qualifier).map(|lib| lib.to_string())
+        };
+
+        let library = match library {
+            Some(lib) => lib,
+            None => {
+                // Unresolved qualifier — local variable method call.
+                // Skip: do not record as a translatable library call.
+                i += 1; // move past the opening paren
+                continue;
+            }
         };
 
         // Extract arguments (simplified: everything between parens).
@@ -499,8 +523,13 @@ fn detect_r_bare_calls(
 /// Extract arguments from a parenthesised expression.
 ///
 /// Given a string and the position of the opening `(`, extracts the
-/// comma-separated arguments as raw strings. Handles nested parentheses
-/// at one level of depth.
+/// comma-separated arguments as raw strings. Tracks nesting depth across
+/// `()`, `[]`, and `{}` (all three bracket kinds share one depth counter,
+/// since a comma inside any of them is not an argument separator), and
+/// treats single- and double-quoted string literals as opaque — brackets
+/// and commas inside a quoted string never affect depth or splitting.
+/// This ensures calls like `np.array([1, 2, 3])` or `f("a, b", [1, 2])`
+/// are split into the correct top-level arguments.
 fn extract_parenthesised_args(s: &str, open_paren_pos: usize) -> Vec<String> {
     let chars: Vec<char> = s.chars().collect();
     if open_paren_pos >= chars.len() || chars[open_paren_pos] != '(' {
@@ -512,16 +541,44 @@ fn extract_parenthesised_args(s: &str, open_paren_pos: usize) -> Vec<String> {
     let mut current_arg = String::new();
     let mut i = open_paren_pos;
 
+    // Tracks whether we're inside a quoted string literal, and which
+    // quote character opened it (so e.g. `'it\'s'` style nesting of the
+    // *other* quote type inside a string doesn't get misread).
+    let mut in_string: Option<char> = None;
+
     while i < chars.len() {
         let ch = chars[i];
+
+        if let Some(quote) = in_string {
+            // Inside a string literal: only watch for the closing quote
+            // (respecting a backslash escape) or an unterminated line end.
+            current_arg.push(ch);
+            if ch == '\\' && i + 1 < chars.len() {
+                // Copy the escaped character verbatim and skip past it so
+                // e.g. `\"` inside a double-quoted string doesn't close it.
+                i += 1;
+                current_arg.push(chars[i]);
+            } else if ch == quote {
+                in_string = None;
+            }
+            i += 1;
+            continue;
+        }
+
         match ch {
-            '(' => {
+            '\'' | '"' => {
+                in_string = Some(ch);
+                if depth >= 1 {
+                    current_arg.push(ch);
+                }
+            }
+            '(' | '[' | '{' => {
                 depth += 1;
                 if depth > 1 {
                     current_arg.push(ch);
                 }
             }
-            ')' => {
+            ')' | ']' | '}' => {
                 depth -= 1;
                 if depth == 0 {
                     let trimmed = current_arg.trim().to_string();
@@ -649,5 +706,84 @@ result <- dplyr::filter(df, x > 0)
     fn test_extract_nested_args() {
         let args = extract_parenthesised_args("func(a, inner(b, c), d)", 4);
         assert_eq!(args, vec!["a", "inner(b, c)", "d"]);
+    }
+
+    // -- G30: bracket/quote-aware argument extraction ----------------------
+
+    #[test]
+    fn test_extract_args_with_list_literal() {
+        // Commas inside a `[...]` list must not split the argument.
+        let args = extract_parenthesised_args("array([1,2,3])", 5);
+        assert_eq!(args, vec!["[1,2,3]"]);
+    }
+
+    #[test]
+    fn test_extract_args_with_list_literal_and_spaces() {
+        let args = extract_parenthesised_args("array([1, 2, 3])", 5);
+        assert_eq!(args, vec!["[1, 2, 3]"]);
+    }
+
+    #[test]
+    fn test_extract_args_with_dict_literal() {
+        // Commas inside a `{...}` dict must not split the argument.
+        let args = extract_parenthesised_args("DataFrame({\"a\": 1, \"b\": 2})", 9);
+        assert_eq!(args, vec!["{\"a\": 1, \"b\": 2}"]);
+    }
+
+    #[test]
+    fn test_extract_args_with_nested_brackets_and_extra_arg() {
+        let args = extract_parenthesised_args("func([1, 2], 3)", 4);
+        assert_eq!(args, vec!["[1, 2]", "3"]);
+    }
+
+    #[test]
+    fn test_extract_args_comma_inside_string_literal() {
+        // A comma embedded in a string literal argument must not split it.
+        let args = extract_parenthesised_args("func(\"a, b\", c)", 4);
+        assert_eq!(args, vec!["\"a, b\"", "c"]);
+    }
+
+    #[test]
+    fn test_extract_args_bracket_inside_string_literal() {
+        // A bracket character embedded in a string must not affect depth.
+        let args = extract_parenthesised_args("func(\"[not, a, list]\", c)", 4);
+        assert_eq!(args, vec!["\"[not, a, list]\"", "c"]);
+    }
+
+    #[test]
+    fn test_extract_args_single_quoted_string() {
+        let args = extract_parenthesised_args("func('a, b', c)", 4);
+        assert_eq!(args, vec!["'a, b'", "c"]);
+    }
+
+    /// G30 (critical): translating `np.array([1,2,3])` must preserve the
+    /// full list literal in the generated Julia call, rather than stopping
+    /// at the first comma inside the brackets (which previously produced
+    /// unparseable output like `collect([1)`).
+    #[test]
+    fn test_numpy_array_full_list_preserved_in_translation() {
+        let code = "import numpy as np\narr = np.array([1,2,3])\n";
+        let unit = parse_python_source("test.py", code).expect("parse should succeed");
+
+        let array_call = unit
+            .detected_calls
+            .iter()
+            .find(|c| c.function == "array")
+            .expect("array call should be detected");
+        assert_eq!(array_call.arguments, vec!["[1,2,3]"]);
+
+        let julia_code =
+            crate::codegen::julia_gen::generate_julia_module(&unit, &[]);
+        assert!(
+            julia_code.contains("[1,2,3]") || julia_code.contains("[1, 2, 3]"),
+            "Generated Julia must contain the full list literal, got:\n{}",
+            julia_code
+        );
+        // The previous bug truncated at the first comma, producing
+        // `collect([1)` — assert that specific breakage is gone.
+        assert!(
+            !julia_code.contains("collect([1)"),
+            "Generated Julia must not contain the truncated/unparseable form"
+        );
     }
 }

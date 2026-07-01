@@ -109,3 +109,7 @@ sync_report*.txt
 # Hypatia scan cache (local-only)
 .hypatia/
 target/
+
+# Zig build cache/output
+**/.zig-cache/
+**/zig-out/
