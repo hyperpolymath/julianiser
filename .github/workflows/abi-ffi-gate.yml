@@ -4,7 +4,10 @@
 # The Idris2 ABI (src/interface/abi) is the source of truth. This gate fails if
 # the Zig FFI (src/interface/ffi) drifts from it: a declared C function with no
 # export, a mismatched result-code map, or an unrendered template token. A
-# second job builds + tests the Zig FFI under the pinned Zig 0.14.0.
+# second job builds + tests the Zig FFI under the pinned Zig 0.14.0. A third job
+# typechecks the Idris2 ABI itself (idris2 --typecheck) so the proofs cannot rot
+# into a non-compiling state while the structural gate stays green — the ABI was
+# authored and locally verified but never compiler-checked in CI (G34).
 name: ABI-FFI Gate
 
 on:
@@ -43,3 +46,18 @@ jobs:
           echo "/tmp/zig-linux-x86_64-0.14.0" >> "$GITHUB_PATH"
       - name: zig test FFI
         run: zig test src/interface/ffi/src/main.zig -lc
+
+  idris2-abi:
+    name: Idris2 ABI typecheck (Idris2 0.7.0)
+    runs-on: ubuntu-latest
+    # Prebuilt pack image (SHA-pinned) — avoids a ~10-min Chez/Idris2 source
+    # build. Same image the Axiom.jl idris2-abi-check job runs against.
+    container:
+      image: ghcr.io/stefan-hoeck/idris2-pack@sha256:de9781906050dc44704ec6de0108c86f899ef17b2642932b79e00245d613b8ad
+    steps:
+      - uses: actions/checkout@v4
+      - name: idris2 --version
+        run: idris2 --version
+      - name: Typecheck ABI package (Types, Layout, Foreign, Proofs, Semantics, Invariants, FfiSeam, Capstone)
+        working-directory: src/interface/abi
+        run: idris2 --typecheck julianiser-abi.ipkg

@@ -6,4 +6,7 @@
 # elixir 1.18.0
 # erlang 27.2
 # zig 0.14.0
-# idris2 0.7.0
+# Uncommented: the ABI (src/interface/abi) is typechecked in CI (abi-ffi-gate.yml
+# :: idris2-abi) and locally via `asdf install`. Pinned to the version the proofs
+# were verified against.
+idris2 0.7.0
