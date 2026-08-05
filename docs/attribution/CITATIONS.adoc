@@ -1,34 +1,34 @@
-= {{PROJECT_NAME}} - Citation Guide
+= julianiser - Citation Guide
 :toc:
 
 == BibTeX
 
 [source,bibtex]
 ----
-@software{{{PROJECT_NAME}}_2026,
-  author = {{{AUTHOR_LAST}}, {{AUTHOR_FIRST}}},
-  title = {{{PROJECT_NAME}}},
+@software{julianiser_2026,
+  author = {Jewell, Jonathan},
+  title = {julianiser},
   year = {2026},
-  url = {https://github.com/hyperpolymath/{{PROJECT_NAME}}},
+  url = {https://github.com/hyperpolymath/julianiser},
   license = {MPL-2.0}
 }
 ----
 
 == Harvard Style
 
-{{AUTHOR_LAST}}, {{AUTHOR_INITIALS}} (2026) _{{PROJECT_NAME}}_ [Computer software]. Available at: https://github.com/hyperpolymath/{{PROJECT_NAME}}
+Jewell, JDJ (2026) _julianiser_ [Computer software]. Available at: https://github.com/hyperpolymath/julianiser
 
 == OSCOLA
 
-Jonathan D.A. Jewell, '{{PROJECT_NAME}}' (2026) <https://github.com/hyperpolymath/{{PROJECT_NAME}}>
+Jonathan D.A. Jewell, 'julianiser' (2026) <https://github.com/hyperpolymath/julianiser>
 
 == MLA
 
-{{AUTHOR_LAST}}, {{AUTHOR_FIRST}} "{{PROJECT_NAME}}." 2026, github.com/hyperpolymath/{{PROJECT_NAME}}.
+Jewell, Jonathan "julianiser." 2026, github.com/hyperpolymath/julianiser.
 
 == APA 7
 
-{{AUTHOR_LAST}}, {{AUTHOR_INITIALS}} (2026). _{{PROJECT_NAME}}_ [Computer software]. GitHub. https://github.com/hyperpolymath/{{PROJECT_NAME}}
+Jewell, JDJ (2026). _julianiser_ [Computer software]. GitHub. https://github.com/hyperpolymath/julianiser
 
 == See Also
 
